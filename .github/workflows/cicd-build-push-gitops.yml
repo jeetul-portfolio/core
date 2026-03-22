@@ -188,6 +188,8 @@ jobs:
         env:
           ARGOCD_WEBHOOK_URL: ${{ secrets.ARGOCD_WEBHOOK_URL }}
           DEPLOY_ENV: ${{ vars.DEPLOY_ENV }}
+          DOCKER_REGISTRY: ${{ vars.DOCKER_REGISTRY }}
+          DOCKER_IMAGE_REPOSITORY: ${{ vars.DOCKER_IMAGE_REPOSITORY }}
           APP_VERSION: ${{ needs.build-and-push.outputs.app_version }}
           APP_VERSION_COMPACT: ${{ needs.build-and-push.outputs.app_version_compact }}
           IMAGE_REF: ${{ needs.build-and-push.outputs.image_ref }}
@@ -198,6 +200,16 @@ jobs:
           fi
 
           ENVIRONMENT="${DEPLOY_ENV:-production}"
+          FINAL_IMAGE_REF="$IMAGE_REF"
+
+          if [ -z "$FINAL_IMAGE_REF" ]; then
+            FINAL_IMAGE_REF="${DOCKER_REGISTRY}/${DOCKER_IMAGE_REPOSITORY}:${APP_VERSION_COMPACT}"
+          fi
+
+          if [ -z "$FINAL_IMAGE_REF" ] || [ "$FINAL_IMAGE_REF" = "/:" ]; then
+            echo "Unable to resolve image reference for ArgoCD payload."
+            exit 1
+          fi
 
           PAYLOAD=$(cat <<EOF
           {
@@ -209,7 +221,7 @@ jobs:
             "commitSha": "${GITHUB_SHA}",
             "version": "${APP_VERSION}",
             "versionTag": "${APP_VERSION_COMPACT}",
-            "image": "${IMAGE_REF}",
+            "image": "${FINAL_IMAGE_REF}",
             "runId": "${GITHUB_RUN_ID}",
             "runUrl": "https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           }
