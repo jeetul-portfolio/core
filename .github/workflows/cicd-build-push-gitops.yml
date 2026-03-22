@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       app_version: ${{ steps.semver.outputs.version }}
+      app_version_compact: ${{ steps.version_tag.outputs.version_compact }}
       image_ref: ${{ steps.export_image.outputs.image_ref }}
     steps:
       - name: Checkout
@@ -51,6 +52,16 @@ jobs:
           VERSION=$(node -p "require('./package.json').version")
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
+      - name: Build compact version tag
+        id: version_tag
+        run: |
+          VERSION_COMPACT=$(echo "${{ steps.semver.outputs.version }}" | tr -d '.')
+          if [ -z "$VERSION_COMPACT" ]; then
+            echo "Version compact tag is empty"
+            exit 1
+          fi
+          echo "version_compact=${VERSION_COMPACT}" >> "$GITHUB_OUTPUT"
+
       - name: Commit version bump
         run: |
           git config user.name "github-actions[bot]"
@@ -83,14 +94,14 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ vars.DOCKER_REGISTRY }}/${{ vars.DOCKER_IMAGE_REPOSITORY }}:v${{ steps.semver.outputs.version }}
+            ${{ vars.DOCKER_REGISTRY }}/${{ vars.DOCKER_IMAGE_REPOSITORY }}:${{ steps.version_tag.outputs.version_compact }}
             ${{ vars.DOCKER_REGISTRY }}/${{ vars.DOCKER_IMAGE_REPOSITORY }}:sha-${{ github.sha }}
             ${{ vars.DOCKER_REGISTRY }}/${{ vars.DOCKER_IMAGE_REPOSITORY }}:latest
 
       - name: Export image reference (version tag)
         id: export_image
         run: |
-          IMAGE_REF="${{ vars.DOCKER_REGISTRY }}/${{ vars.DOCKER_IMAGE_REPOSITORY }}:v${{ steps.semver.outputs.version }}"
+          IMAGE_REF="${{ vars.DOCKER_REGISTRY }}/${{ vars.DOCKER_IMAGE_REPOSITORY }}:${{ steps.version_tag.outputs.version_compact }}"
           echo "image_ref=${IMAGE_REF}" >> "$GITHUB_OUTPUT"
 
   generate-and-commit-manifests:
@@ -114,7 +125,7 @@ jobs:
 
       - name: Update image in deploy/services.json
         env:
-          IMAGE_REF: ${{ needs.build-and-push.outputs.image_ref }}
+          IMAGE_REF: ${{ vars.DOCKER_REGISTRY }}/${{ vars.DOCKER_IMAGE_REPOSITORY }}:${{ needs.build-and-push.outputs.app_version_compact }}
         run: |
           node -e '
           const fs = require("fs");
