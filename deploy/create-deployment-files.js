@@ -106,7 +106,7 @@ function buildConfigMountBlocks(configMounts) {
   };
 }
 
-function resolveDeploymentValues(general, deployment) {
+function resolveDeploymentValues(general, deployment, index) {
   const requestsDefaults = (general.resources && general.resources.requests) || {};
   const limitsDefaults = (general.resources && general.resources.limits) || {};
 
@@ -126,8 +126,15 @@ function resolveDeploymentValues(general, deployment) {
   const namespace = deployment.namespace || general.namespace || 'default';
   const replicas = deployment.replicas || 1;
 
-  if (!deployment.name || !deployment.image || !deployment.containerPort) {
-    throw new Error('Each deployment must include "name", "image", and "containerPort".');
+  const missingFields = [];
+  if (!deployment.name) missingFields.push('name');
+  if (!deployment.image) missingFields.push('image');
+  if (!deployment.containerPort) missingFields.push('containerPort');
+
+  if (missingFields.length > 0) {
+    throw new Error(
+      `Deployment at index ${index} is missing required field(s): ${missingFields.join(', ')}.`
+    );
   }
 
   if (!requests.cpu || !requests.memory || !limits.cpu || !limits.memory) {
@@ -185,8 +192,8 @@ function generateFiles() {
     fs.mkdirSync(networkingOutputDir, { recursive: true });
   }
 
-  deployments.forEach((deployment) => {
-    const values = resolveDeploymentValues(general, deployment);
+  deployments.forEach((deployment, index) => {
+    const values = resolveDeploymentValues(general, deployment, index);
 
     const deploymentYamlPath = path.join(deploymentsOutputDir, `${deployment.name}-deployment.yaml`);
     const serviceYamlPath = path.join(networkingOutputDir, `${deployment.name}-service.yaml`);

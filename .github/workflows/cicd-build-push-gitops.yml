@@ -119,14 +119,33 @@ jobs:
           node -e '
           const fs = require("fs");
           const path = "deploy/services.json";
+
+          if (!process.env.IMAGE_REF) {
+            throw new Error("IMAGE_REF is empty. Check build-and-push job outputs and registry variables.");
+          }
+
           const config = JSON.parse(fs.readFileSync(path, "utf8"));
           if (!Array.isArray(config.deployments) || config.deployments.length === 0) {
             throw new Error("services.json must contain deployments array");
           }
-          config.deployments = config.deployments.map((deployment) => ({
-            ...deployment,
-            image: process.env.IMAGE_REF,
-          }));
+
+          config.deployments = config.deployments.map((deployment, index) => {
+            if (!deployment || typeof deployment !== "object") {
+              throw new Error(`Deployment at index ${index} is not a valid object.`);
+            }
+            if (!deployment.name) {
+              throw new Error(`Deployment at index ${index} is missing name.`);
+            }
+            if (!deployment.containerPort) {
+              throw new Error(`Deployment at index ${index} (${deployment.name}) is missing containerPort.`);
+            }
+
+            return {
+              ...deployment,
+              image: process.env.IMAGE_REF,
+            };
+          });
+
           fs.writeFileSync(path, JSON.stringify(config, null, 2) + "\n");
           '
 
