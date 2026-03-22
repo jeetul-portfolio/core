@@ -1,0 +1,41 @@
+{
+  "general": {
+    "namespace": "default",
+    "preStartImage": "busybox:1.36",
+    "resources": {
+      "requests": {
+        "cpu": "100m",
+        "memory": "128Mi"
+      },
+      "limits": {
+        "cpu": "250m",
+        "memory": "256Mi"
+      }
+    }
+  },
+  "deployments": [
+    {
+      "name": "node-service-template",
+      "replicas": 1,
+      "image": "node-service-template:latest",
+      "containerPort": 8080,
+      "preStartCommands": [
+        "echo Preparing app before startup",
+        "echo Pre-start checks completed"
+      ],
+      "service": {
+        "type": "ClusterIP",
+        "port": 8080,
+        "targetPort": 8080
+      },
+      "configMounts": [
+        {
+          "configMapName": "node-service-template-config",
+          "mountPath": "/app/config/service-config.json",
+          "subPath": "service-config.json",
+          "readOnly": true
+        }
+      ]
+    }
+  ]
+}
