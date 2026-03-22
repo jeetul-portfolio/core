@@ -180,19 +180,44 @@ jobs:
 
   notify-argocd:
     runs-on: ubuntu-latest
-    needs: generate-and-commit-manifests
+    needs:
+      - build-and-push
+      - generate-and-commit-manifests
     steps:
       - name: Notify Argo CD via webhook
         env:
           ARGOCD_WEBHOOK_URL: ${{ secrets.ARGOCD_WEBHOOK_URL }}
+          DEPLOY_ENV: ${{ vars.DEPLOY_ENV }}
+          APP_VERSION: ${{ needs.build-and-push.outputs.app_version }}
+          APP_VERSION_COMPACT: ${{ needs.build-and-push.outputs.app_version_compact }}
+          IMAGE_REF: ${{ needs.build-and-push.outputs.image_ref }}
         run: |
           if [ -z "$ARGOCD_WEBHOOK_URL" ]; then
             echo "ARGOCD_WEBHOOK_URL is not configured."
             exit 1
           fi
 
+          ENVIRONMENT="${DEPLOY_ENV:-production}"
+
+          PAYLOAD=$(cat <<EOF
+          {
+            "source": "github-actions",
+            "event": "manifests-updated",
+            "environment": "${ENVIRONMENT}",
+            "repository": "${GITHUB_REPOSITORY}",
+            "branch": "${GITHUB_REF_NAME}",
+            "commitSha": "${GITHUB_SHA}",
+            "version": "${APP_VERSION}",
+            "versionTag": "${APP_VERSION_COMPACT}",
+            "image": "${IMAGE_REF}",
+            "runId": "${GITHUB_RUN_ID}",
+            "runUrl": "https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          }
+          EOF
+          )
+
           curl --fail --show-error --location \
             --request POST \
             --header "Content-Type: application/json" \
-            --data '{"source":"github-actions","event":"manifests-updated"}' \
+            --data "$PAYLOAD" \
             "$ARGOCD_WEBHOOK_URL"
