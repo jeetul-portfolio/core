@@ -17,7 +17,7 @@
     {
       "name": "node-service-template",
       "replicas": 1,
-      "image": "docker.io/jeetulsamaiya1/portfolio-core:105",
+      "image": "docker.io/jeetulsamaiya1/portfolio-core:106",
       "containerPort": 8080,
       "preStartCommands": [
         "echo Preparing app before startup",

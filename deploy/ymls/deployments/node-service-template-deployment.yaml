@@ -24,7 +24,7 @@ spec:
               echo Pre-start checks completed
       containers:
         - name: node-service-template
-          image: docker.io/jeetulsamaiya1/portfolio-core:105
+          image: docker.io/jeetulsamaiya1/portfolio-core:106
           ports:
             - containerPort: 8080
           resources:
