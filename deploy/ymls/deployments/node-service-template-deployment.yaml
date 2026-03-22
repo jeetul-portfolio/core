@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-service-template
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node-service-template
+  template:
+    metadata:
+      labels:
+        app: node-service-template
+    spec:
+      initContainers:
+        - name: pre-start-commands
+          image: busybox:1.36
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo Preparing app before startup
+              echo Pre-start checks completed
+      containers:
+        - name: node-service-template
+          image: node-service-template:latest
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          volumeMounts:
+            - name: config-mount-1
+              mountPath: /app/config/service-config.json
+              subPath: service-config.json
+              readOnly: true
+      volumes:
+        - name: config-mount-1
+          configMap:
+            name: node-service-template-config
