@@ -1,9 +1,11 @@
 module.exports = {
   mysql: {
     host: process.env.MYSQL_HOST || 'localhost',
-    user: process.env.MYSQL_USER || 'root',
-    password: process.env.MYSQL_PASSWORD || '',
-    database: process.env.MYSQL_DATABASE || 'my_db',
+    user: process.env.MYSQL_USER || 'admin',
+    password: process.env.MYSQL_PASSWORD || 'supersecretpassword',
+    database: process.env.MYSQL_DATABASE || 'portfolio',
+    maxConnections: process.env.MYSQL_MAX_CONNECTIONS || 10,
+    port: process.env.MYSQL_PORT || 3306,
   },
   postgres: {
     host: process.env.POSTGRES_HOST || 'localhost',
