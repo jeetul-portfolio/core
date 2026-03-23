@@ -28,14 +28,7 @@
         "port": 8080,
         "targetPort": 8080
       },
-      "configMounts": [
-        {
-          "configMapName": "core-config",
-          "mountPath": "/app/config/serviceconfig.js",
-          "subPath": "core.js",
-          "readOnly": true
-        }
-      ]
+      "configMounts": []
     }
   ]
 }
