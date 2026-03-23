@@ -13,11 +13,11 @@ permissions:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   SERVICE_NAME: ${{ github.event.repository.name }}
-  DOCKER_REGISTRY: ${{ vars.ORG_DOCKER_REGISTRY || vars.DOCKER_REGISTRY || 'docker.io' }}
-  DOCKER_REGISTRY_USERNAME: ${{ secrets.ORG_DOCKER_REGISTRY_USERNAME || secrets.DOCKER_REGISTRY_USERNAME }}
-  DOCKER_REGISTRY_PASSWORD: ${{ secrets.ORG_DOCKER_REGISTRY_PASSWORD || secrets.DOCKER_REGISTRY_PASSWORD }}
-  DOCKER_REPO_PRIVATE: ${{ vars.ORG_DOCKER_REPO_PRIVATE || vars.DOCKER_REPO_PRIVATE || 'false' }}
-  IMAGE_REPOSITORY: ${{ vars.ORG_DOCKER_NAMESPACE && vars.ORG_IMAGE_NAMESPACE && format('{0}/{1}/{2}', vars.ORG_DOCKER_NAMESPACE, vars.ORG_IMAGE_NAMESPACE, github.event.repository.name) || format('{0}-{1}', vars.DOCKER_IMAGE_REPOSITORY, github.event.repository.name) }}
+  DOCKER_REGISTRY: ${{ vars.ORG_DOCKER_REGISTRY }}
+  DOCKER_REGISTRY_USERNAME: ${{ secrets.ORG_DOCKER_REGISTRY_USERNAME }}
+  DOCKER_REGISTRY_PASSWORD: ${{ secrets.ORG_DOCKER_REGISTRY_PASSWORD }}
+  DOCKER_REPO_PRIVATE: ${{ vars.ORG_DOCKER_REPO_PRIVATE || 'false' }}
+  IMAGE_REPOSITORY: ${{ format('{0}/{1}/{2}', vars.ORG_DOCKER_NAMESPACE, vars.ORG_IMAGE_NAMESPACE, github.event.repository.name) }}
 
 jobs:
   build-and-push:
