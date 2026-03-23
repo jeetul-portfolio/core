@@ -24,7 +24,7 @@ spec:
               echo Pre-start checks completed
       containers:
         - name: core
-          image: docker.io/jeetulsamaiya1/portfolio:core-master-1016
+          image: docker.io/jeetulsamaiya1/portfolio:core-master-1017
           ports:
             - containerPort: 8080
           resources:
@@ -34,12 +34,5 @@ spec:
             limits:
               cpu: 250m
               memory: 256Mi
-          volumeMounts:
-            - name: config-mount-1
-              mountPath: /app/config/serviceconfig.js
-              subPath: core.js
-              readOnly: true
-      volumes:
-        - name: config-mount-1
-          configMap:
-            name: core-config
+
+
