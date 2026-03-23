@@ -17,7 +17,7 @@ env:
   DOCKER_REGISTRY_USERNAME: ${{ secrets.ORG_DOCKER_REGISTRY_USERNAME }}
   DOCKER_REGISTRY_PASSWORD: ${{ secrets.ORG_DOCKER_REGISTRY_PASSWORD }}
   DOCKER_REPO_PRIVATE: ${{ vars.ORG_DOCKER_REPO_PRIVATE || 'false' }}
-  IMAGE_REPOSITORY: ${{ format('{0}/{1}/{2}', vars.ORG_DOCKER_NAMESPACE, vars.ORG_IMAGE_NAMESPACE, github.event.repository.name) }}
+  IMAGE_REPOSITORY: ${{ format('{0}/{1}', vars.ORG_DOCKER_NAMESPACE, vars.ORG_IMAGE_NAMESPACE) }}
 
 jobs:
   build-and-push:
@@ -25,6 +25,7 @@ jobs:
     outputs:
       app_version: ${{ steps.semver.outputs.version }}
       app_version_compact: ${{ steps.version_tag.outputs.version_compact }}
+      image_tag: ${{ steps.image_tag.outputs.image_tag }}
       image_ref: ${{ steps.export_image.outputs.image_ref }}
     steps:
       - name: Checkout
@@ -71,6 +72,13 @@ jobs:
           fi
           echo "version_compact=${VERSION_COMPACT}" >> "$GITHUB_OUTPUT"
 
+      - name: Build image tag
+        id: image_tag
+        run: |
+          BRANCH_SAFE=$(echo "${GITHUB_REF_NAME}" | tr '[:upper:]' '[:lower:]' | sed -E 's#[^a-z0-9._-]+#-#g' | sed -E 's#^-+|-+$##g')
+          IMAGE_TAG="${{ env.SERVICE_NAME }}-${BRANCH_SAFE}-${{ steps.version_tag.outputs.version_compact }}"
+          echo "image_tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+
       - name: Commit version bump
         run: |
           git config user.name "github-actions[bot]"
@@ -99,80 +107,6 @@ jobs:
           username: ${{ env.DOCKER_REGISTRY_USERNAME }}
           password: ${{ env.DOCKER_REGISTRY_PASSWORD }}
 
-      - name: Ensure Docker repository exists
-        env:
-          DOCKER_REGISTRY: ${{ env.DOCKER_REGISTRY }}
-          DOCKER_IMAGE_REPOSITORY: ${{ env.IMAGE_REPOSITORY }}
-          DOCKER_REGISTRY_USERNAME: ${{ env.DOCKER_REGISTRY_USERNAME }}
-          DOCKER_REGISTRY_PASSWORD: ${{ env.DOCKER_REGISTRY_PASSWORD }}
-          DOCKER_REPO_PRIVATE: ${{ env.DOCKER_REPO_PRIVATE }}
-        run: |
-          if [ "$DOCKER_REGISTRY" != "docker.io" ] && [ "$DOCKER_REGISTRY" != "index.docker.io" ]; then
-            echo "Skipping Docker Hub repository creation for registry: $DOCKER_REGISTRY"
-            exit 0
-          fi
-
-          FULL_REPO="$DOCKER_IMAGE_REPOSITORY"
-          if [[ "$FULL_REPO" == *"/"* ]]; then
-            NAMESPACE="${FULL_REPO%%/*}"
-            REPOSITORY_NAME="${FULL_REPO#*/}"
-          else
-            NAMESPACE="$DOCKER_REGISTRY_USERNAME"
-            REPOSITORY_NAME="$FULL_REPO"
-          fi
-
-          AUTH_PAYLOAD=$(printf '{"identifier":"%s","secret":"%s"}' "$DOCKER_REGISTRY_USERNAME" "$DOCKER_REGISTRY_PASSWORD")
-          TOKEN_RESPONSE=$(curl --silent --show-error --fail \
-            --request POST \
-            --header "Content-Type: application/json" \
-            --data "$AUTH_PAYLOAD" \
-            "https://hub.docker.com/v2/auth/token")
-
-          TOKEN=$(echo "$TOKEN_RESPONSE" | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
-
-          if [ -z "$TOKEN" ]; then
-            echo "Warning: Unable to authenticate to Docker Hub API (no access_token), skipping repository pre-check."
-            exit 0
-          fi
-
-          STATUS_CODE=$(curl --silent --output /dev/null --write-out "%{http_code}" \
-            --header "Authorization: Bearer $TOKEN" \
-            "https://hub.docker.com/v2/namespaces/${NAMESPACE}/repositories/${REPOSITORY_NAME}")
-
-          if [ "$STATUS_CODE" = "200" ]; then
-            echo "Docker Hub repository already exists: ${NAMESPACE}/${REPOSITORY_NAME}"
-            exit 0
-          fi
-
-          if [ "$STATUS_CODE" = "403" ]; then
-            echo "Warning: Docker Hub returned 403 for repository check (${NAMESPACE}/${REPOSITORY_NAME})."
-            echo "Continuing to docker push; if push fails, verify Docker Hub permissions for this namespace."
-            exit 0
-          fi
-
-          if [ "$STATUS_CODE" != "404" ]; then
-            echo "Warning: Unexpected Docker Hub API response while checking repository: HTTP $STATUS_CODE"
-            echo "Continuing to docker push."
-            exit 0
-          fi
-
-          REPO_PRIVATE="${DOCKER_REPO_PRIVATE:-false}"
-          CREATE_PAYLOAD=$(printf '{"name":"%s","namespace":"%s","registry":"docker.io","is_private":%s}' "$REPOSITORY_NAME" "$NAMESPACE" "$REPO_PRIVATE")
-
-          curl --silent --show-error --fail \
-            --request POST \
-            --header "Authorization: Bearer $TOKEN" \
-            --header "Content-Type: application/json" \
-            --data "$CREATE_PAYLOAD" \
-            "https://hub.docker.com/v2/namespaces/${NAMESPACE}/repositories" >/dev/null
-
-          if [ "$?" -ne 0 ]; then
-            echo "Warning: Unable to create Docker Hub repository via API. Continuing to docker push."
-            exit 0
-          fi
-
-          echo "Created Docker Hub repository: ${NAMESPACE}/${REPOSITORY_NAME}"
-
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
@@ -181,14 +115,14 @@ jobs:
           platforms: linux/arm64
           push: true
           tags: |
-            ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_REPOSITORY }}:${{ steps.version_tag.outputs.version_compact }}
+            ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_REPOSITORY }}:${{ steps.image_tag.outputs.image_tag }}
             ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_REPOSITORY }}:sha-${{ github.sha }}
             ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_REPOSITORY }}:latest
 
       - name: Export image reference (version tag)
         id: export_image
         run: |
-          IMAGE_REF="${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_REPOSITORY }}:${{ steps.version_tag.outputs.version_compact }}"
+          IMAGE_REF="${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_REPOSITORY }}:${{ steps.image_tag.outputs.image_tag }}"
           echo "image_ref=${IMAGE_REF}" >> "$GITHUB_OUTPUT"
 
   generate-and-commit-manifests:
@@ -212,7 +146,7 @@ jobs:
 
       - name: Update image in deploy/services.json
         env:
-          IMAGE_REF: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_REPOSITORY }}:${{ needs.build-and-push.outputs.app_version_compact }}
+          IMAGE_REF: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_REPOSITORY }}:${{ needs.build-and-push.outputs.image_tag }}
         run: |
           node -e '
           const fs = require("fs");
