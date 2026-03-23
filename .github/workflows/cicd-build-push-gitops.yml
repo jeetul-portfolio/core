@@ -121,43 +121,55 @@ jobs:
             REPOSITORY_NAME="$FULL_REPO"
           fi
 
-          REPOSITORY_NAME_ENCODED=$(printf '%s' "$REPOSITORY_NAME" | sed 's#/#%2F#g')
-
-          LOGIN_PAYLOAD=$(printf '{"username":"%s","password":"%s"}' "$DOCKER_REGISTRY_USERNAME" "$DOCKER_REGISTRY_PASSWORD")
-          TOKEN=$(curl --silent --show-error --fail \
+          AUTH_PAYLOAD=$(printf '{"identifier":"%s","secret":"%s"}' "$DOCKER_REGISTRY_USERNAME" "$DOCKER_REGISTRY_PASSWORD")
+          TOKEN_RESPONSE=$(curl --silent --show-error --fail \
             --request POST \
             --header "Content-Type: application/json" \
-            --data "$LOGIN_PAYLOAD" \
-            "https://hub.docker.com/v2/users/login/" | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
+            --data "$AUTH_PAYLOAD" \
+            "https://hub.docker.com/v2/auth/token")
+
+          TOKEN=$(echo "$TOKEN_RESPONSE" | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
 
           if [ -z "$TOKEN" ]; then
-            echo "Unable to authenticate to Docker Hub API."
-            exit 1
+            echo "Warning: Unable to authenticate to Docker Hub API (no access_token), skipping repository pre-check."
+            exit 0
           fi
 
           STATUS_CODE=$(curl --silent --output /dev/null --write-out "%{http_code}" \
-            --header "Authorization: JWT $TOKEN" \
-            "https://hub.docker.com/v2/repositories/${NAMESPACE}/${REPOSITORY_NAME_ENCODED}/")
+            --header "Authorization: Bearer $TOKEN" \
+            "https://hub.docker.com/v2/namespaces/${NAMESPACE}/repositories/${REPOSITORY_NAME}")
 
           if [ "$STATUS_CODE" = "200" ]; then
             echo "Docker Hub repository already exists: ${NAMESPACE}/${REPOSITORY_NAME}"
             exit 0
           fi
 
+          if [ "$STATUS_CODE" = "403" ]; then
+            echo "Warning: Docker Hub returned 403 for repository check (${NAMESPACE}/${REPOSITORY_NAME})."
+            echo "Continuing to docker push; if push fails, verify Docker Hub permissions for this namespace."
+            exit 0
+          fi
+
           if [ "$STATUS_CODE" != "404" ]; then
-            echo "Unexpected Docker Hub API response while checking repository: HTTP $STATUS_CODE"
-            exit 1
+            echo "Warning: Unexpected Docker Hub API response while checking repository: HTTP $STATUS_CODE"
+            echo "Continuing to docker push."
+            exit 0
           fi
 
           REPO_PRIVATE="${DOCKER_REPO_PRIVATE:-false}"
-          CREATE_PAYLOAD=$(printf '{"namespace":"%s","name":"%s","is_private":%s}' "$NAMESPACE" "$REPOSITORY_NAME" "$REPO_PRIVATE")
+          CREATE_PAYLOAD=$(printf '{"name":"%s","namespace":"%s","registry":"docker.io","is_private":%s}' "$REPOSITORY_NAME" "$NAMESPACE" "$REPO_PRIVATE")
 
           curl --silent --show-error --fail \
             --request POST \
-            --header "Authorization: JWT $TOKEN" \
+            --header "Authorization: Bearer $TOKEN" \
             --header "Content-Type: application/json" \
             --data "$CREATE_PAYLOAD" \
-            "https://hub.docker.com/v2/repositories/" >/dev/null
+            "https://hub.docker.com/v2/namespaces/${NAMESPACE}/repositories" >/dev/null
+
+          if [ "$?" -ne 0 ]; then
+            echo "Warning: Unable to create Docker Hub repository via API. Continuing to docker push."
+            exit 0
+          fi
 
           echo "Created Docker Hub repository: ${NAMESPACE}/${REPOSITORY_NAME}"
 
