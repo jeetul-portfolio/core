@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: core
+  namespace: portfolio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: core
+  template:
+    metadata:
+      labels:
+        app: core
+    spec:
+      initContainers:
+        - name: pre-start-commands
+          image: busybox:1.36
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo Preparing app before startup
+              echo Pre-start checks completed
+      containers:
+        - name: core
+          image: docker.io/jeetulsamaiya1/portfolio:core-master-1015
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          volumeMounts:
+            - name: config-mount-1
+              mountPath: /app/config/serviceconfig.js
+              subPath: core.js
+              readOnly: true
+      volumes:
+        - name: config-mount-1
+          configMap:
+            name: core-config
