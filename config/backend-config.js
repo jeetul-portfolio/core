@@ -1,6 +1,6 @@
 module.exports = {
   mysql: {
-    host: process.env.MYSQL_HOST || 'localhost',
+    host: process.env.MYSQL_HOST || 'mysql-svc.mysql.svc.cluster.local',
     user: process.env.MYSQL_USER || 'admin',
     password: process.env.MYSQL_PASSWORD || 'supersecretpassword',
     database: process.env.MYSQL_DATABASE || 'portfolio',
