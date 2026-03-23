@@ -10,6 +10,10 @@ permissions:
   contents: write
   packages: write
 
+env:
+  SERVICE_NAME: ${{ github.event.repository.name }}
+  IMAGE_REPOSITORY: ${{ vars.DOCKER_IMAGE_REPOSITORY }}-${{ github.event.repository.name }}
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -98,14 +102,14 @@ jobs:
           platforms: linux/arm64
           push: true
           tags: |
-            ${{ vars.DOCKER_REGISTRY }}/${{ vars.DOCKER_IMAGE_REPOSITORY }}:${{ steps.version_tag.outputs.version_compact }}
-            ${{ vars.DOCKER_REGISTRY }}/${{ vars.DOCKER_IMAGE_REPOSITORY }}:sha-${{ github.sha }}
-            ${{ vars.DOCKER_REGISTRY }}/${{ vars.DOCKER_IMAGE_REPOSITORY }}:latest
+            ${{ vars.DOCKER_REGISTRY }}/${{ env.IMAGE_REPOSITORY }}:${{ steps.version_tag.outputs.version_compact }}
+            ${{ vars.DOCKER_REGISTRY }}/${{ env.IMAGE_REPOSITORY }}:sha-${{ github.sha }}
+            ${{ vars.DOCKER_REGISTRY }}/${{ env.IMAGE_REPOSITORY }}:latest
 
       - name: Export image reference (version tag)
         id: export_image
         run: |
-          IMAGE_REF="${{ vars.DOCKER_REGISTRY }}/${{ vars.DOCKER_IMAGE_REPOSITORY }}:${{ steps.version_tag.outputs.version_compact }}"
+          IMAGE_REF="${{ vars.DOCKER_REGISTRY }}/${{ env.IMAGE_REPOSITORY }}:${{ steps.version_tag.outputs.version_compact }}"
           echo "image_ref=${IMAGE_REF}" >> "$GITHUB_OUTPUT"
 
   generate-and-commit-manifests:
@@ -129,7 +133,7 @@ jobs:
 
       - name: Update image in deploy/services.json
         env:
-          IMAGE_REF: ${{ vars.DOCKER_REGISTRY }}/${{ vars.DOCKER_IMAGE_REPOSITORY }}:${{ needs.build-and-push.outputs.app_version_compact }}
+          IMAGE_REF: ${{ vars.DOCKER_REGISTRY }}/${{ env.IMAGE_REPOSITORY }}:${{ needs.build-and-push.outputs.app_version_compact }}
         run: |
           node -e '
           const fs = require("fs");
@@ -193,7 +197,7 @@ jobs:
           ARGOCD_WEBHOOK_URL: ${{ secrets.ARGOCD_WEBHOOK_URL }}
           DEPLOY_ENV: ${{ vars.DEPLOY_ENV }}
           DOCKER_REGISTRY: ${{ vars.DOCKER_REGISTRY }}
-          DOCKER_IMAGE_REPOSITORY: ${{ vars.DOCKER_IMAGE_REPOSITORY }}
+          DOCKER_IMAGE_REPOSITORY: ${{ env.IMAGE_REPOSITORY }}
           APP_VERSION: ${{ needs.build-and-push.outputs.app_version }}
           APP_VERSION_COMPACT: ${{ needs.build-and-push.outputs.app_version_compact }}
           IMAGE_REF: ${{ needs.build-and-push.outputs.image_ref }}
