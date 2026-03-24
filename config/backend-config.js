@@ -7,6 +7,15 @@ module.exports = {
     maxConnections: process.env.MYSQL_MAX_CONNECTIONS || 10,
     port: process.env.MYSQL_PORT || 3306,
   },
+  github: {
+    apiBaseUrl: process.env.GITHUB_API_BASE_URL || 'https://api.github.com',
+    token: process.env.GITHUB_TOKEN || '',
+    userAgent: process.env.GITHUB_USER_AGENT || 'portfolio-core-sync-service',
+    maxCommitsPerRepo: Number(process.env.GITHUB_MAX_COMMITS_PER_REPO || 100),
+    commitStatsConcurrency: Number(process.env.GITHUB_COMMIT_STATS_CONCURRENCY || 5),
+    requestTimeoutMs: Number(process.env.GITHUB_REQUEST_TIMEOUT_MS || 15000),
+    syncRepos: process.env.GITHUB_SYNC_REPOS || '',
+  },
   postgres: {
     host: process.env.POSTGRES_HOST || 'localhost',
     user: process.env.POSTGRES_USER || 'postgres',
