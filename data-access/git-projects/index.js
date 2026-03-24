@@ -1,4 +1,6 @@
 const makeGetGitProjects = require('./get-git-projects');
+const makeUpsertGitProject = require('./upsert-git-project');
+const makeUpdateGitProjectSyncStatus = require('./update-git-project-sync-status');
 
 const TABLE_NAME = 'git_projects';
 const fields = [
@@ -25,7 +27,19 @@ module.exports = function buildGitProjectsDataAccess(dependencies) {
     fields,
   });
 
+  const upsertGitProject = makeUpsertGitProject({
+    ...dependencies,
+    tableName: TABLE_NAME,
+  });
+
+  const updateGitProjectSyncStatus = makeUpdateGitProjectSyncStatus({
+    ...dependencies,
+    tableName: TABLE_NAME,
+  });
+
   return {
     getGitProjects,
+    upsertGitProject,
+    updateGitProjectSyncStatus,
   };
 };

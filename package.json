@@ -6,13 +6,15 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
-    "generate:deploy-yamls": "node deploy/create-deployment-files.js"
+    "generate:deploy-yamls": "node deploy/create-deployment-files.js",
+    "sync:git": "node scripts/sync-git-data.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "axios": "^1.13.6",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "joi": "^18.1.1",

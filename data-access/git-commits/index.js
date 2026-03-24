@@ -1,5 +1,6 @@
 const makeGetGitCommits = require('./get-git-commits');
 const makeGetGitCommitCounts = require('./get-git-commit-counts');
+const makeUpsertGitCommitsForProject = require('./upsert-git-commits-for-project');
 
 const TABLE_NAME = 'git_commits';
 const fields = [
@@ -35,8 +36,14 @@ module.exports = function buildGitCommitsDataAccess(dependencies) {
     tableName: TABLE_NAME,
   });
 
+  const upsertGitCommitsForProject = makeUpsertGitCommitsForProject({
+    ...dependencies,
+    tableName: TABLE_NAME,
+  });
+
   return {
     getGitCommits,
     getGitCommitCounts,
+    upsertGitCommitsForProject,
   };
 };
