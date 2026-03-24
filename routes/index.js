@@ -1,11 +1,14 @@
 
 const sampleRoutes = require('./sample-routes');
+const gitRoutes = require('./git-routes');
 
 function buildRoutes({ controller, express }) {
-  const routes = sampleRoutes({ controller, router: express.Router() });
+  const sample = sampleRoutes({ controller, router: express.Router() });
+  const git = gitRoutes({ controller, router: express.Router() });
 
   return {
-    routes,
+    sample,
+    git,
   };
 }
 
