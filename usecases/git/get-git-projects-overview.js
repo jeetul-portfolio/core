@@ -35,7 +35,7 @@ function makeGetGitProjectsOverviewUsecase({ dataAccess, logger, Joi, Validation
 
     const normalizedLimit = validatedInputs.limit;
 
-    const projects = await dataAccess.getGitProjects({
+    const projects = await dataAccess.gitProjects.getGitProjects({
       onlyActive: validatedInputs.onlyActive,
       projectKeys: validatedInputs.projectKeys,
       sortBy: validatedInputs.sortBy,
@@ -49,8 +49,8 @@ function makeGetGitProjectsOverviewUsecase({ dataAccess, logger, Joi, Validation
     const projectIds = projects.map((project) => project.id);
 
     const [commitCounts, commits] = await Promise.all([
-      dataAccess.getGitCommitCounts({ projectIds }),
-      dataAccess.getGitCommits({
+      dataAccess.gitCommits.getGitCommitCounts({ projectIds }),
+      dataAccess.gitCommits.getGitCommits({
         projectIds,
         fieldsToSelect: RECENT_COMMIT_FIELDS,
         sortBy: 'committedAt',

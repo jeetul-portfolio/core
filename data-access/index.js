@@ -1,8 +1,8 @@
 
 const { getSampleData } = require('./sample');
 const { getGreeting } = require('./greeting');
-const { getGitProjects } = require('./git-projects');
-const { getGitCommits, getGitCommitCounts } = require('./git-commits');
+const buildGitProjectsDataAccess = require('./git-projects');
+const buildGitCommitsDataAccess = require('./git-commits');
 const mysql = require('mysql2/promise');
 
 module.exports = function buildDataAccess(dependencies) {
@@ -23,11 +23,13 @@ module.exports = function buildDataAccess(dependencies) {
     mysqlPool: pool,
   };
 
+  const gitProjects = buildGitProjectsDataAccess(dataAccessDependencies);
+  const gitCommits = buildGitCommitsDataAccess(dataAccessDependencies);
+
   return {
     getSampleData: getSampleData(dataAccessDependencies),
     getGreeting: getGreeting(dataAccessDependencies),
-    getGitProjects: getGitProjects(dataAccessDependencies),
-    getGitCommits: getGitCommits(dataAccessDependencies),
-    getGitCommitCounts: getGitCommitCounts(dataAccessDependencies),
+    gitProjects,
+    gitCommits,
   };
 };

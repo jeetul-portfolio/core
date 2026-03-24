@@ -23,22 +23,20 @@ const fields = [
   'updatedAt',
 ];
 
-function getGitCommits(dependencies) {
-  return makeGetGitCommits({
+module.exports = function buildGitCommitsDataAccess(dependencies) {
+  const getGitCommits = makeGetGitCommits({
     ...dependencies,
     tableName: TABLE_NAME,
     fields,
   });
-}
 
-function getGitCommitCounts(dependencies) {
-  return makeGetGitCommitCounts({
+  const getGitCommitCounts = makeGetGitCommitCounts({
     ...dependencies,
     tableName: TABLE_NAME,
   });
-}
 
-module.exports = {
-  getGitCommits,
-  getGitCommitCounts,
+  return {
+    getGitCommits,
+    getGitCommitCounts,
+  };
 };

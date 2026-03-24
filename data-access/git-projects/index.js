@@ -18,14 +18,14 @@ const fields = [
   'updatedAt',
 ];
 
-function getGitProjects(dependencies) {
-  return makeGetGitProjects({
+module.exports = function buildGitProjectsDataAccess(dependencies) {
+  const getGitProjects = makeGetGitProjects({
     ...dependencies,
     tableName: TABLE_NAME,
     fields,
   });
-}
 
-module.exports = {
-  getGitProjects,
+  return {
+    getGitProjects,
+  };
 };
