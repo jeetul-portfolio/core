@@ -13,7 +13,7 @@ function makeGetGitProjectsOverviewController({ usecase, formatResponse, formatE
         projectKeys: parseProjectKeys(req.query.projectKeys),
       });
 
-      const data = await usecase.getGitProjectsOverview(validatedInputs);
+      const data = await usecase.gitUsecase.getGitProjectsOverview(validatedInputs);
 
       formatResponse(res, { statusCode: 200, body: data });
     } catch (error) {

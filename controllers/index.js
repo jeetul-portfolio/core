@@ -1,6 +1,7 @@
 
 const buildSampleController = require('./sample');
 const buildGitController = require('./git');
+const buildArticlesController = require('./articles');
 const { formatResponse, formatError } = require('./response-formatter');
 
 module.exports = function(dependencies) {
@@ -11,7 +12,10 @@ module.exports = function(dependencies) {
   };
 
   return {
-    getSampleData: buildSampleController(controllerDependencies),
-    ...buildGitController(controllerDependencies),
+    sampleController: {
+      getSampleData: buildSampleController(controllerDependencies),
+    },
+    gitController: buildGitController(controllerDependencies),
+    articlesController: buildArticlesController(controllerDependencies),
   };
 };

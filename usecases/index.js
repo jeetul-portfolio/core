@@ -1,11 +1,15 @@
 
 const buildSampleUsecase = require('./sample');
 const buildGitUsecase = require('./git');
+const buildArticlesUsecase = require('./articles');
 
 module.exports = function(dependencies) {
   return {
-    getSampleData: buildSampleUsecase(dependencies),
-    ...buildGitUsecase(dependencies),
+    sampleUsecase: {
+      getSampleData: buildSampleUsecase(dependencies),
+    },
+    gitUsecase: buildGitUsecase(dependencies),
+    articlesUsecase: buildArticlesUsecase(dependencies),
   };
 };
 

@@ -2,7 +2,7 @@ const container = require('../di-container');
 
 async function run() {
   try {
-    const result = await container.usecase.syncGitData();
+    const result = await container.usecase.gitUsecase.syncGitData();
     console.log(JSON.stringify(result, null, 2));
     process.exit(0);
   } catch (error) {

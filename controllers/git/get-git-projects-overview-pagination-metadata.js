@@ -10,7 +10,7 @@ function makeGetGitProjectsOverviewPaginationMetadataController({ usecase, forma
         projectKeys: parseProjectKeys(req.query.projectKeys),
       });
 
-      const data = await usecase.getGitProjectsOverviewPaginationMetadata(validatedInputs);
+      const data = await usecase.gitUsecase.getGitProjectsOverviewPaginationMetadata(validatedInputs);
       formatResponse(res, { statusCode: 200, body: data });
     } catch (error) {
       logger.error('Error in getGitProjectsOverviewPaginationMetadataController:', error.message);
