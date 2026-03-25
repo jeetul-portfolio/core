@@ -18,6 +18,8 @@ const RECENT_COMMIT_FIELDS = [
 function makeGetGitProjectsOverviewUsecase({ dataAccess, logger, Joi, ValidationError }) {
   return async function getGitProjectsOverviewUsecase({
     limit = 5,
+    page = 1,
+    pageSize = 10,
     sortBy = 'committedAt',
     sortOrder = 'desc',
     onlyActive = false,
@@ -27,6 +29,8 @@ function makeGetGitProjectsOverviewUsecase({ dataAccess, logger, Joi, Validation
       Joi,
       ValidationError,
       limit,
+      page,
+      pageSize,
       sortBy,
       sortOrder,
       onlyActive,
@@ -117,17 +121,19 @@ function makeGetGitProjectsOverviewUsecase({ dataAccess, logger, Joi, Validation
       };
     });
 
-    if (validatedInputs.sortBy === 'committedAt') {
-      return sortByCommittedAt(overviewRows, validatedInputs.sortOrder);
-    }
+    const sortedRows = validatedInputs.sortBy === 'committedAt'
+      ? sortByCommittedAt(overviewRows, validatedInputs.sortOrder)
+      : overviewRows;
 
-    return overviewRows;
+    return paginateRows(sortedRows, validatedInputs.page, validatedInputs.pageSize);
   };
   
-  function validateInputs({ Joi, ValidationError, limit, sortBy, sortOrder, onlyActive, projectKeys }) {
+  function validateInputs({ Joi, ValidationError, limit, page, pageSize, sortBy, sortOrder, onlyActive, projectKeys }) {
   const schema = Joi.object({
     limit: Joi.number().integer().min(1).max(100).default(5),
-      sortBy: Joi.string().trim().valid('committedAt', 'updatedAt', 'createdAt', 'lastSyncedAt', 'displayName', 'projectKey').default('committedAt'),
+    page: Joi.number().integer().min(1).default(1),
+    pageSize: Joi.number().integer().min(1).max(100).default(10),
+    sortBy: Joi.string().trim().valid('committedAt', 'updatedAt', 'createdAt', 'lastSyncedAt', 'displayName', 'projectKey').default('committedAt'),
     sortOrder: Joi.string().trim().lowercase().valid('asc', 'desc').default('desc'),
     onlyActive: Joi.boolean().truthy('1', 'true', 'yes').falsy('0', 'false', 'no').default(false),
     projectKeys: Joi.array().items(Joi.string().trim().min(1).max(80)).default([]),
@@ -135,6 +141,8 @@ function makeGetGitProjectsOverviewUsecase({ dataAccess, logger, Joi, Validation
 
   const validatedResponse = schema.validate({
     limit,
+    page,
+    pageSize,
     sortBy,
     sortOrder,
     onlyActive,
@@ -161,6 +169,11 @@ function sortByCommittedAt(rows, sortOrder = 'desc') {
 
     return leftValue > rightValue ? direction : -direction;
   });
+}
+
+function paginateRows(rows, page, pageSize) {
+  const offset = (page - 1) * pageSize;
+  return rows.slice(offset, offset + pageSize);
 }
 
 }

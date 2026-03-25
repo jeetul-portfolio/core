@@ -1,28 +1,25 @@
-function makeGetGitProjectsOverviewController({ usecase, formatResponse, formatError, logger, Joi, ValidationError }) {
-  return async function getGitProjectsOverviewController(req, res) {
+function makeGetGitProjectsOverviewPaginationMetadataController({ usecase, formatResponse, formatError, logger, Joi, ValidationError }) {
+  return async function getGitProjectsOverviewPaginationMetadataController(req, res) {
     try {
       const validatedInputs = validateInputs({
         Joi,
         ValidationError,
-        limit: req.query.limit,
         page: req.query.page,
         pageSize: req.query.pageSize,
-        sortBy: req.query.sortBy,
-        sortOrder: req.query.sortOrder,
         onlyActive: req.query.onlyActive,
         projectKeys: parseProjectKeys(req.query.projectKeys),
       });
 
-      const data = await usecase.getGitProjectsOverview(validatedInputs);
-
+      const data = await usecase.getGitProjectsOverviewPaginationMetadata(validatedInputs);
       formatResponse(res, { statusCode: 200, body: data });
     } catch (error) {
-      logger.error('Error in getGitProjectsOverviewController:', error.message);
+      logger.error('Error in getGitProjectsOverviewPaginationMetadataController:', error.message);
       formatError(res, { error });
     }
   };
+}
 
-  function parseProjectKeys(projectKeys) {
+function parseProjectKeys(projectKeys) {
   if (!projectKeys) {
     return [];
   }
@@ -40,27 +37,15 @@ function makeGetGitProjectsOverviewController({ usecase, formatResponse, formatE
     .filter(Boolean);
 }
 
-
-function validateInputs({ Joi, ValidationError, limit, page, pageSize, sortBy, sortOrder, onlyActive, projectKeys }) {
+function validateInputs({ Joi, ValidationError, page, pageSize, onlyActive, projectKeys }) {
   const schema = Joi.object({
-    limit: Joi.number().integer().min(1).max(100).default(5),
     page: Joi.number().integer().min(1).default(1),
     pageSize: Joi.number().integer().min(1).max(100).default(10),
-    sortBy: Joi.string().trim().valid('committedAt', 'updatedAt', 'createdAt', 'lastSyncedAt', 'displayName', 'projectKey').default('committedAt'),
-    sortOrder: Joi.string().trim().lowercase().valid('asc', 'desc').default('desc'),
     onlyActive: Joi.boolean().truthy('1', 'true', 'yes').falsy('0', 'false', 'no').default(false),
     projectKeys: Joi.array().items(Joi.string().trim().min(1).max(80)).default([]),
   });
 
-  const validatedResponse = schema.validate({
-    limit,
-    page,
-    pageSize,
-    sortBy,
-    sortOrder,
-    onlyActive,
-    projectKeys,
-  });
+  const validatedResponse = schema.validate({ page, pageSize, onlyActive, projectKeys });
 
   if (validatedResponse.error) {
     throw new ValidationError(validatedResponse.error.message);
@@ -68,6 +53,5 @@ function validateInputs({ Joi, ValidationError, limit, page, pageSize, sortBy, s
 
   return validatedResponse.value;
 }
-}
 
-module.exports = makeGetGitProjectsOverviewController;
+module.exports = makeGetGitProjectsOverviewPaginationMetadataController;

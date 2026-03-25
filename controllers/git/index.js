@@ -1,4 +1,5 @@
 const makeGetGitProjectsOverviewController = require('./get-git-projects-overview');
+const makeGetGitProjectsOverviewPaginationMetadataController = require('./get-git-projects-overview-pagination-metadata');
 const Joi = require('joi');
 const { ValidationError } = require('../../exceptions');
 
@@ -11,5 +12,6 @@ module.exports = function buildGitController(dependencies) {
 
   return {
     getGitProjectsOverview: makeGetGitProjectsOverviewController(controllerDependencies),
+    getGitProjectsOverviewPaginationMetadata: makeGetGitProjectsOverviewPaginationMetadataController(controllerDependencies),
   };
 };
