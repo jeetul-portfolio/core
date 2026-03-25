@@ -7,10 +7,7 @@ function makeUpsertGitCommitsForProjectDataAccess({ logger, mysqlPool, tableName
 
       await connection.query(
         `
-          UPDATE ${tableName}
-          SET isLatest = 0,
-              syncedAt = ?,
-              updatedAt = NOW()
+          DELETE FROM ${tableName}
           WHERE projectId = ?
         `,
         [projectId],
