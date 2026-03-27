@@ -5,6 +5,7 @@ function makeGetArticleByIdController({ usecase, formatResponse, formatError, lo
         Joi,
         ValidationError,
         id: req.params.id,
+        includeDrafts: req.query.includeDrafts,
       });
 
       const data = await usecase.articlesUsecase.getArticleById(validatedInputs);
@@ -16,12 +17,13 @@ function makeGetArticleByIdController({ usecase, formatResponse, formatError, lo
   };
 }
 
-function validateInputs({ Joi, ValidationError, id }) {
+function validateInputs({ Joi, ValidationError, id, includeDrafts }) {
   const schema = Joi.object({
     id: Joi.number().integer().min(1).required(),
+    includeDrafts: Joi.boolean().truthy('true').truthy('1').falsy('false').falsy('0').default(false),
   });
 
-  const validatedResponse = schema.validate({ id });
+  const validatedResponse = schema.validate({ id, includeDrafts });
 
   if (validatedResponse.error) {
     throw new ValidationError(validatedResponse.error.message);

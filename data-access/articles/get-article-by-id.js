@@ -1,6 +1,7 @@
 function makeGetArticleByIdDataAccess({ logger, mysqlPool, tableName }) {
-  return async function getArticleByIdDataAccess({ id }) {
+  return async function getArticleByIdDataAccess({ id, includeDrafts = false }) {
     try {
+      const statusClause = includeDrafts ? '' : " AND status = 'published'";
       const query = `
         SELECT
           id,
@@ -10,11 +11,12 @@ function makeGetArticleByIdDataAccess({ logger, mysqlPool, tableName }) {
           cover_image AS coverImage,
           author_name AS authorName,
           author_avatar AS authorAvatar,
+          status,
           published_at AS publishedAt,
           created_at AS createdAt,
           updated_at AS updatedAt
         FROM ${tableName}
-        WHERE id = ? AND status = 'published'
+        WHERE id = ?${statusClause}
         LIMIT 1
       `;
 

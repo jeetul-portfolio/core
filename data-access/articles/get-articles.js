@@ -4,11 +4,16 @@ function makeGetArticlesDataAccess({ logger, mysqlPool, tableName }) {
     pageSize = 10,
     search = '',
     tag,
+    includeDrafts = false,
   } = {}) {
     try {
       const offset = (page - 1) * pageSize;
-      const whereClauses = ["status = 'published'"];
+      const whereClauses = [];
       const params = [];
+
+      if (!includeDrafts) {
+        whereClauses.push("status = 'published'");
+      }
 
       if (search) {
         const searchTerm = `%${search}%`;
@@ -33,6 +38,7 @@ function makeGetArticlesDataAccess({ logger, mysqlPool, tableName }) {
           cover_image AS coverImage,
           author_name AS authorName,
           author_avatar AS authorAvatar,
+          status,
           published_at AS publishedAt,
           created_at AS createdAt,
           updated_at AS updatedAt

@@ -12,7 +12,10 @@ function presentArticleListItem(article) {
     title: article.title,
     excerpt: article.excerpt,
     tags: inferTags(article),
+    status: normalizeStatus(article.status),
     publishedAt: toIsoDate(article.publishedAt || article.createdAt),
+    createdAt: toIsoDate(article.createdAt),
+    updatedAt: toIsoDate(article.updatedAt),
     readTime: estimateReadTime(article.content),
   };
 }
@@ -23,9 +26,13 @@ function presentArticleDetail(article) {
     slug: buildSlug(article.title),
     title: article.title,
     tags: inferTags(article),
+    status: normalizeStatus(article.status),
     authorName: article.authorName,
     authorAvatarUrl: article.authorAvatar,
+    coverImage: article.coverImage,
     publishedAt: toIsoDate(article.publishedAt || article.createdAt),
+    createdAt: toIsoDate(article.createdAt),
+    updatedAt: toIsoDate(article.updatedAt),
     readTime: estimateReadTime(article.content),
     excerpt: article.excerpt,
     content: article.content,
@@ -66,6 +73,15 @@ function toIsoDate(value) {
   }
 
   return new Date(value).toISOString();
+}
+
+function normalizeStatus(status) {
+  const normalized = String(status || '').toLowerCase();
+  if (!normalized) {
+    return 'draft';
+  }
+
+  return normalized;
 }
 
 module.exports = {
