@@ -9,7 +9,7 @@ module.exports = {
   },
   github: {
     apiBaseUrl: process.env.GITHUB_API_BASE_URL || 'https://api.github.com',
-    token: process.env.GITHUB_TOKEN || '70d3ed9d-f7a8-453d-a83d-c7ce7c646d14',
+    token: process.env.GITHUB_TOKEN || '',
     userAgent: process.env.GITHUB_USER_AGENT || 'portfolio-core-sync-service',
     maxCommitsPerRepo: Number(process.env.GITHUB_MAX_COMMITS_PER_REPO || 100),
     commitStatsConcurrency: Number(process.env.GITHUB_COMMIT_STATS_CONCURRENCY || 5),
@@ -27,7 +27,7 @@ module.exports = {
     port: process.env.REDIS_PORT || 6379,
   },
   auth: {
-    accessTokenSecret: process.env.AUTH_ACCESS_TOKEN_SECRET || '',
+    accessTokenSecret: process.env.AUTH_ACCESS_TOKEN_SECRET || '70d3ed9d-f7a8-453d-a83d-c7ce7c646d14',
     accessTokenExpiresIn: process.env.AUTH_ACCESS_TOKEN_EXPIRES_IN || '15m',
     refreshTokenTtlDays: Number(process.env.AUTH_REFRESH_TOKEN_TTL_DAYS || 14),
     refreshTokenCookieName: process.env.AUTH_REFRESH_TOKEN_COOKIE_NAME || 'portfolio_admin_refresh_token',
