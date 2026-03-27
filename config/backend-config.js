@@ -9,7 +9,7 @@ module.exports = {
   },
   github: {
     apiBaseUrl: process.env.GITHUB_API_BASE_URL || 'https://api.github.com',
-    token: process.env.GITHUB_TOKEN || '',
+    token: process.env.GITHUB_TOKEN || '70d3ed9d-f7a8-453d-a83d-c7ce7c646d14',
     userAgent: process.env.GITHUB_USER_AGENT || 'portfolio-core-sync-service',
     maxCommitsPerRepo: Number(process.env.GITHUB_MAX_COMMITS_PER_REPO || 100),
     commitStatsConcurrency: Number(process.env.GITHUB_COMMIT_STATS_CONCURRENCY || 5),
