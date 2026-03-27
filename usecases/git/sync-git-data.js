@@ -1,6 +1,4 @@
-const buildGithubExternalCalls = require('../../external-calls/github');
-
-function makeSyncGitDataUsecase({ dataAccess, config, logger, Joi, ValidationError }) {
+function makeSyncGitDataUsecase({ dataAccess, config, logger, Joi, ValidationError, buildGithubExternalCalls }) {
   return async function syncGitDataUsecase({ repos, maxCommitsPerRepo } = {}) {
     const validatedInputs = validateInputs({ Joi, ValidationError, repos, maxCommitsPerRepo });
     const syncTimestamp = new Date();

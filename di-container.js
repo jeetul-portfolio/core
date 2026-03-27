@@ -22,6 +22,7 @@ const authMiddlewares = {
     jwt,
     config,
     AuthenticationError,
+    dataAccess,
   }),
   authorize: makeAuthorizeMiddleware({
     ForbiddenError,

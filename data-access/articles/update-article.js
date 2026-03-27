@@ -1,3 +1,5 @@
+const toUtcMysqlDatetime = require('../../utils/to-utc-mysql-datetime');
+
 function makeUpdateArticleDataAccess({ logger, mysqlPool, tableName }) {
   return async function updateArticleDataAccess(payload) {
     try {
@@ -41,7 +43,10 @@ function appendAssignment(payload, inputField, dbField, assignments, values) {
   }
 
   assignments.push(`${dbField} = ?`);
-  values.push(payload[inputField]);
+  const normalizedValue = inputField === 'publishedAt'
+    ? toUtcMysqlDatetime(payload[inputField])
+    : payload[inputField];
+  values.push(normalizedValue);
 }
 
 module.exports = makeUpdateArticleDataAccess;

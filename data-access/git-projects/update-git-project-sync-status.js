@@ -1,3 +1,5 @@
+const toUtcMysqlDatetime = require('../../utils/to-utc-mysql-datetime');
+
 function makeUpdateGitProjectSyncStatusDataAccess({ logger, mysqlPool, tableName }) {
   return async function updateGitProjectSyncStatusDataAccess({
     projectId,
@@ -17,7 +19,13 @@ function makeUpdateGitProjectSyncStatusDataAccess({ logger, mysqlPool, tableName
               updatedAt = NOW()
           WHERE id = ?
         `,
-        [syncStatus, lastSyncedAt, nextSyncAt, isStale ? 1 : 0, projectId],
+        [
+          syncStatus,
+          toUtcMysqlDatetime(lastSyncedAt),
+          toUtcMysqlDatetime(nextSyncAt),
+          isStale ? 1 : 0,
+          projectId,
+        ],
       );
 
       return result.affectedRows;

@@ -1,7 +1,12 @@
-const crypto = require('crypto');
-const { AuthenticationError, ForbiddenError } = require('../../exceptions');
-
-module.exports = function buildAuthUsecase({ dataAccess, config, jwt, bcrypt }) {
+module.exports = function buildAuthUsecase({
+  dataAccess,
+  config,
+  jwt,
+  bcrypt,
+  crypto,
+  AuthenticationError,
+  ForbiddenError,
+}) {
   const authConfig = config.auth;
 
   return {
@@ -12,7 +17,8 @@ module.exports = function buildAuthUsecase({ dataAccess, config, jwt, bcrypt }) 
   };
 
   async function login({ email, password, ipAddress, userAgent }) {
-    const user = await dataAccess.auth.findUserByEmail({ email });
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const user = await dataAccess.users.findUserForLoginByEmail({ email: normalizedEmail });
 
     if (!user || !user.passwordHash) {
       throw new AuthenticationError('Invalid credentials');
@@ -27,7 +33,7 @@ module.exports = function buildAuthUsecase({ dataAccess, config, jwt, bcrypt }) 
       throw new AuthenticationError('Invalid credentials');
     }
 
-    const roles = await dataAccess.auth.getUserRoles({ userId: user.id });
+    const roles = await getUserRoleCodes(user.id);
 
     const accessToken = signAccessToken({ userId: user.id, roles });
     const refreshToken = createRefreshTokenValue();
@@ -43,7 +49,7 @@ module.exports = function buildAuthUsecase({ dataAccess, config, jwt, bcrypt }) 
       userAgent,
     });
 
-    await dataAccess.auth.updateUserLoginMeta({ userId: user.id });
+    await dataAccess.users.updateUserLoginMeta({ userId: user.id });
 
     return {
       accessToken,
@@ -78,12 +84,12 @@ module.exports = function buildAuthUsecase({ dataAccess, config, jwt, bcrypt }) 
       throw new AuthenticationError('Refresh token has expired');
     }
 
-    const user = await dataAccess.auth.findUserById({ id: tokenRecord.userId });
+    const user = await dataAccess.users.findUserById({ id: tokenRecord.userId });
     if (!user || !user.isActive) {
       throw new AuthenticationError('User is not allowed');
     }
 
-    const roles = await dataAccess.auth.getUserRoles({ userId: user.id });
+    const roles = await getUserRoleCodes(user.id);
 
     const newAccessToken = signAccessToken({ userId: user.id, roles });
     const newRefreshToken = createRefreshTokenValue();
@@ -128,13 +134,13 @@ module.exports = function buildAuthUsecase({ dataAccess, config, jwt, bcrypt }) 
   }
 
   async function me({ userId }) {
-    const user = await dataAccess.auth.findUserById({ id: userId });
+    const user = await dataAccess.users.findUserById({ id: userId });
 
     if (!user || !user.isActive) {
       throw new AuthenticationError('User not found or inactive');
     }
 
-    const roles = await dataAccess.auth.getUserRoles({ userId: user.id });
+    const roles = await getUserRoleCodes(user.id);
 
     return {
       id: user.id,
@@ -145,10 +151,13 @@ module.exports = function buildAuthUsecase({ dataAccess, config, jwt, bcrypt }) 
   }
 
   function signAccessToken({ userId, roles }) {
+    const issuedAtMs = Date.now();
+
     return jwt.sign(
       {
         sub: String(userId),
         roles,
+        iatMs: issuedAtMs,
       },
       authConfig.accessTokenSecret,
       {
@@ -164,5 +173,11 @@ module.exports = function buildAuthUsecase({ dataAccess, config, jwt, bcrypt }) 
 
   function hashToken(value) {
     return crypto.createHash('sha256').update(String(value)).digest('hex');
+  }
+
+  async function getUserRoleCodes(userId) {
+    const roleIds = await dataAccess.userRoles.getRoleIdsByUserId({ userId });
+    const roles = await dataAccess.roles.getRolesByIds({ roleIds });
+    return roles.map((role) => role.code);
   }
 };

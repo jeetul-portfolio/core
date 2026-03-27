@@ -5,10 +5,15 @@ const makeUpdateArticleUsecase = require('./update-article');
 const makeDeleteArticleUsecase = require('./delete-article');
 
 module.exports = function buildArticlesUsecase(dependencies) {
+  const getArticleById = makeGetArticleByIdUsecase(dependencies);
+
   return {
     getArticles: makeGetArticlesUsecase(dependencies),
-    getArticleById: makeGetArticleByIdUsecase(dependencies),
-    createArticle: makeCreateArticleUsecase(dependencies),
+    getArticleById,
+    createArticle: makeCreateArticleUsecase({
+      ...dependencies,
+      getArticleById,
+    }),
     updateArticle: makeUpdateArticleUsecase(dependencies),
     deleteArticle: makeDeleteArticleUsecase(dependencies),
   };

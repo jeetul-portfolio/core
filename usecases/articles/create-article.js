@@ -1,9 +1,10 @@
 const { presentArticleDetail } = require('./article-presenter');
 
-function makeCreateArticleUsecase({ dataAccess }) {
+function makeCreateArticleUsecase({ dataAccess, getArticleById }) {
   return async function createArticleUsecase(input) {
     const payload = buildPayload(input);
-    const article = await dataAccess.articles.createArticle(payload);
+    const created = await dataAccess.articles.createArticle(payload);
+    const article = await getArticleById({ id: created.id, includeDrafts: true });
 
     return presentArticleDetail(article);
   };

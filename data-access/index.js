@@ -5,6 +5,10 @@ const buildGitProjectsDataAccess = require('./git-projects');
 const buildGitCommitsDataAccess = require('./git-commits');
 const buildArticlesDataAccess = require('./articles');
 const buildAuthDataAccess = require('./auth');
+const buildUsersDataAccess = require('./users');
+const buildRolesDataAccess = require('./roles');
+const buildUserRolesDataAccess = require('./user-roles');
+const buildProfilesDataAccess = require('./profiles');
 const mysql = require('mysql2/promise');
 
 module.exports = function buildDataAccess(dependencies) {
@@ -29,6 +33,10 @@ module.exports = function buildDataAccess(dependencies) {
   const gitCommits = buildGitCommitsDataAccess(dataAccessDependencies);
   const articles = buildArticlesDataAccess(dataAccessDependencies);
   const auth = buildAuthDataAccess(dataAccessDependencies);
+  const users = buildUsersDataAccess(dataAccessDependencies);
+  const roles = buildRolesDataAccess(dataAccessDependencies);
+  const userRoles = buildUserRolesDataAccess(dataAccessDependencies);
+  const profiles = buildProfilesDataAccess(dataAccessDependencies);
 
   return {
     getSampleData: getSampleData(dataAccessDependencies),
@@ -37,5 +45,9 @@ module.exports = function buildDataAccess(dependencies) {
     gitCommits,
     articles,
     auth,
+    users,
+    roles,
+    userRoles,
+    profiles,
   };
 };

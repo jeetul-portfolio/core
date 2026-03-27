@@ -1,3 +1,5 @@
+const toUtcMysqlDatetime = require('../../utils/to-utc-mysql-datetime');
+
 function makeCreateArticleDataAccess({ logger, mysqlPool, tableName }) {
   return async function createArticleDataAccess({
     title,
@@ -25,31 +27,9 @@ function makeCreateArticleDataAccess({ logger, mysqlPool, tableName }) {
         authorName,
         authorAvatar,
         status,
-        publishedAt,
+        toUtcMysqlDatetime(publishedAt),
       ]);
-
-      const [rows] = await mysqlPool.query(
-        `
-          SELECT
-            id,
-            title,
-            excerpt,
-            content,
-            cover_image AS coverImage,
-            author_name AS authorName,
-            author_avatar AS authorAvatar,
-            status,
-            published_at AS publishedAt,
-            created_at AS createdAt,
-            updated_at AS updatedAt
-          FROM ${tableName}
-          WHERE id = ?
-          LIMIT 1
-        `,
-        [result.insertId]
-      );
-
-      return rows[0] || null;
+      return { id: result.insertId };
     } catch (error) {
       logger.error('Database query failed in createArticleDataAccess:', error.message);
       throw error;
