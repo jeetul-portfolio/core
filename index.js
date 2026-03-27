@@ -1,12 +1,17 @@
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const config = require('./config/index.js');
 const container = require('./di-container');
 
 const app = express();
 
 // 1. Basic middleware
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true,
+}));
+app.use(cookieParser());
 app.use(express.json());
 
 // 2. Inject global middleware from your DI container
