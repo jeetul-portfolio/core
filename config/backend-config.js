@@ -26,4 +26,13 @@ module.exports = {
     host: process.env.REDIS_HOST || 'localhost',
     port: process.env.REDIS_PORT || 6379,
   },
+  auth: {
+    accessTokenSecret: process.env.AUTH_ACCESS_TOKEN_SECRET || '',
+    accessTokenExpiresIn: process.env.AUTH_ACCESS_TOKEN_EXPIRES_IN || '15m',
+    refreshTokenTtlDays: Number(process.env.AUTH_REFRESH_TOKEN_TTL_DAYS || 14),
+    refreshTokenCookieName: process.env.AUTH_REFRESH_TOKEN_COOKIE_NAME || 'portfolio_admin_refresh_token',
+    cookieSecure: process.env.AUTH_COOKIE_SECURE === 'true',
+    cookieSameSite: process.env.AUTH_COOKIE_SAME_SITE || 'lax',
+    issuer: process.env.AUTH_ISSUER || 'portfolio-core',
+  },
 };
