@@ -1,6 +1,4 @@
-const { presentArticleDetail } = require('./article-presenter');
-
-function makeCreateArticleUsecase({ dataAccess, getArticleById }) {
+function makeCreateArticleUsecase({ dataAccess, getArticleById, presentArticleDetail, buildExcerpt }) {
   return async function createArticleUsecase(input) {
     const payload = buildPayload(input);
     const created = await dataAccess.articles.createArticle(payload);
@@ -16,7 +14,7 @@ function buildPayload(input) {
 
   return {
     title: input.title,
-    excerpt: input.excerpt || buildExcerpt(input.content),
+    excerpt: buildExcerpt(input.excerpt || input.content),
     content: input.content,
     coverImage: normalizeNullable(input.coverImage),
     authorName: normalizeNullable(input.authorName),
@@ -24,15 +22,6 @@ function buildPayload(input) {
     status,
     publishedAt: status === 'published' ? (input.publishedAt || now) : normalizeNullable(input.publishedAt),
   };
-}
-
-function buildExcerpt(content) {
-  const plainText = String(content || '')
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  return plainText.slice(0, 240);
 }
 
 function normalizeNullable(value) {

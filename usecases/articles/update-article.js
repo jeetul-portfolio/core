@@ -1,7 +1,4 @@
-const { NotFoundError } = require('../../exceptions');
-const { presentArticleDetail } = require('./article-presenter');
-
-function makeUpdateArticleUsecase({ dataAccess }) {
+function makeUpdateArticleUsecase({ dataAccess, NotFoundError, presentArticleDetail, buildExcerpt }) {
   return async function updateArticleUsecase(input) {
     const payload = buildPayload(input);
     const updated = await dataAccess.articles.updateArticle(payload);
@@ -33,7 +30,7 @@ function buildPayload(input) {
   }
 
   if (Object.prototype.hasOwnProperty.call(input, 'excerpt')) {
-    payload.excerpt = input.excerpt || buildExcerpt(input.content || '');
+    payload.excerpt = buildExcerpt(input.excerpt || input.content || '');
   }
 
   if (Object.prototype.hasOwnProperty.call(input, 'content')) {
@@ -68,15 +65,6 @@ function buildPayload(input) {
   }
 
   return payload;
-}
-
-function buildExcerpt(content) {
-  const plainText = String(content || '')
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  return plainText.slice(0, 240);
 }
 
 function normalizeNullable(value) {
