@@ -17,7 +17,7 @@
     {
       "name": "core",
       "replicas": 1,
-      "image": "docker.io/jeetulsamaiya1/portfolio:core-master-1032",
+      "image": "docker.io/jeetulsamaiya1/portfolio:core-master-1033",
       "containerPort": 8080,
       "preStartCommands": [
         "echo Preparing app before startup",

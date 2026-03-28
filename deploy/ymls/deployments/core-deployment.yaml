@@ -24,7 +24,7 @@ spec:
               echo Pre-start checks completed
       containers:
         - name: core
-          image: docker.io/jeetulsamaiya1/portfolio:core-master-1032
+          image: docker.io/jeetulsamaiya1/portfolio:core-master-1033
           ports:
             - containerPort: 8080
           resources:
