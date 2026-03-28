@@ -1,6 +1,6 @@
 function makeUpdateArticleUsecase({ dataAccess, NotFoundError, presentArticleDetail, buildExcerpt }) {
   return async function updateArticleUsecase(input) {
-    const payload = buildPayload(input);
+    const payload = buildPayload(input, buildExcerpt);
     const updated = await dataAccess.articles.updateArticle(payload);
 
     if (!updated) {
@@ -20,7 +20,7 @@ function makeUpdateArticleUsecase({ dataAccess, NotFoundError, presentArticleDet
   };
 }
 
-function buildPayload(input) {
+function buildPayload(input, buildExcerpt) {
   const payload = {
     id: input.id,
   };
