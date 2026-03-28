@@ -29,15 +29,11 @@ function buildPayload(input, buildExcerpt) {
     payload.title = input.title;
   }
 
-  if (Object.prototype.hasOwnProperty.call(input, 'excerpt')) {
-    payload.excerpt = buildExcerpt(input.excerpt || input.content || '');
-  }
-
   if (Object.prototype.hasOwnProperty.call(input, 'content')) {
     payload.content = input.content;
-    if (!Object.prototype.hasOwnProperty.call(input, 'excerpt')) {
-      payload.excerpt = buildExcerpt(input.content);
-    }
+    payload.excerpt = buildExcerpt(input.content);
+  } else if (Object.prototype.hasOwnProperty.call(input, 'excerpt')) {
+    payload.excerpt = buildExcerpt(input.excerpt || '');
   }
 
   if (Object.prototype.hasOwnProperty.call(input, 'coverImage')) {

@@ -14,7 +14,7 @@ function buildPayload(input, buildExcerpt) {
 
   return {
     title: input.title,
-    excerpt: buildExcerpt(input.excerpt || input.content),
+    excerpt: buildExcerpt(input.content),
     content: input.content,
     coverImage: normalizeNullable(input.coverImage),
     authorName: normalizeNullable(input.authorName),

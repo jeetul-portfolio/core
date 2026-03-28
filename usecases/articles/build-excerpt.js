@@ -8,6 +8,7 @@ function buildExcerpt(input) {
   const $ = cheerio.load(html);
 
   // Drop non-content nodes before extracting readable text for excerpt.
+  $('head').remove();
   $('script,style,noscript,template').remove();
   $(BLOCK_TAG_SELECTOR).append(' ');
 
