@@ -19,6 +19,12 @@ function makeCreateArticleController({ usecase, formatResponse, formatError, log
 function validateInputs({ Joi, ValidationError, body }) {
   const schema = Joi.object({
     title: Joi.string().trim().min(1).max(255).required(),
+    tags: Joi.alternatives()
+      .try(
+        Joi.array().items(Joi.string().trim().min(1).max(80)).max(50),
+        Joi.string().trim().allow('')
+      )
+      .optional(),
     excerpt: Joi.string().trim().allow('').max(2000).optional(),
     content: Joi.string().trim().min(1).required(),
     coverImage: Joi.string().uri().allow(null, '').optional(),

@@ -6,6 +6,7 @@ function makeGetArticleByIdDataAccess({ logger, mysqlPool, tableName }) {
         SELECT
           id,
           title,
+          tags,
           excerpt,
           content,
           cover_image AS coverImage,

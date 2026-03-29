@@ -1,7 +1,4 @@
-const { NotFoundError } = require('../../exceptions');
-const { presentArticleDetail } = require('./article-presenter');
-
-function makeGetArticleByIdUsecase({ dataAccess }) {
+function makeGetArticleByIdUsecase({ dataAccess, presentArticleDetail, NotFoundError }) {
   return async function getArticleByIdUsecase({ id, includeDrafts = false }) {
     const article = await dataAccess.articles.getArticleById({ id, includeDrafts });
 

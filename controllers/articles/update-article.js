@@ -21,6 +21,12 @@ function validateInputs({ Joi, ValidationError, id, body }) {
   const schema = Joi.object({
     id: Joi.number().integer().min(1).required(),
     title: Joi.string().trim().min(1).max(255).optional(),
+    tags: Joi.alternatives()
+      .try(
+        Joi.array().items(Joi.string().trim().min(1).max(80)).max(50),
+        Joi.string().trim().allow('')
+      )
+      .optional(),
     excerpt: Joi.string().trim().allow('').max(2000).optional(),
     content: Joi.string().trim().min(1).optional(),
     coverImage: Joi.string().uri().allow(null, '').optional(),
@@ -28,7 +34,7 @@ function validateInputs({ Joi, ValidationError, id, body }) {
     authorAvatar: Joi.string().uri().allow(null, '').optional(),
     status: Joi.string().valid('draft', 'published').optional(),
     publishedAt: Joi.date().iso().allow(null).optional(),
-  }).or('title', 'excerpt', 'content', 'coverImage', 'authorName', 'authorAvatar', 'status', 'publishedAt');
+  }).or('title', 'tags', 'excerpt', 'content', 'coverImage', 'authorName', 'authorAvatar', 'status', 'publishedAt');
 
   const validatedResponse = schema.validate({
     id,

@@ -1,6 +1,4 @@
-const { presentArticleListItem } = require('./article-presenter');
-
-function makeGetArticlesUsecase({ dataAccess }) {
+function makeGetArticlesUsecase({ dataAccess, presentArticleListItem }) {
   return async function getArticlesUsecase({
     page = 1,
     pageSize = 10,

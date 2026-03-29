@@ -1,6 +1,12 @@
-function makeCreateArticleUsecase({ dataAccess, getArticleById, presentArticleDetail, buildExcerpt }) {
+function makeCreateArticleUsecase({
+  dataAccess,
+  getArticleById,
+  presentArticleDetail,
+  buildExcerpt,
+  normalizeTagsForStorage,
+}) {
   return async function createArticleUsecase(input) {
-    const payload = buildPayload(input, buildExcerpt);
+    const payload = buildPayload(input, buildExcerpt, normalizeTagsForStorage);
     const created = await dataAccess.articles.createArticle(payload);
     const article = await getArticleById({ id: created.id, includeDrafts: true });
 
@@ -8,12 +14,13 @@ function makeCreateArticleUsecase({ dataAccess, getArticleById, presentArticleDe
   };
 }
 
-function buildPayload(input, buildExcerpt) {
+function buildPayload(input, buildExcerpt, normalizeTagsForStorage) {
   const now = new Date().toISOString();
   const status = input.status || 'draft';
 
   return {
     title: input.title,
+    tags: normalizeTagsForStorage(input.tags),
     excerpt: buildExcerpt(input.content),
     content: input.content,
     coverImage: normalizeNullable(input.coverImage),

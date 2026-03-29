@@ -1,6 +1,12 @@
-function makeUpdateArticleUsecase({ dataAccess, NotFoundError, presentArticleDetail, buildExcerpt }) {
+function makeUpdateArticleUsecase({
+  dataAccess,
+  NotFoundError,
+  presentArticleDetail,
+  buildExcerpt,
+  normalizeTagsForStorage,
+}) {
   return async function updateArticleUsecase(input) {
-    const payload = buildPayload(input, buildExcerpt);
+    const payload = buildPayload(input, buildExcerpt, normalizeTagsForStorage);
     const updated = await dataAccess.articles.updateArticle(payload);
 
     if (!updated) {
@@ -20,13 +26,17 @@ function makeUpdateArticleUsecase({ dataAccess, NotFoundError, presentArticleDet
   };
 }
 
-function buildPayload(input, buildExcerpt) {
+function buildPayload(input, buildExcerpt, normalizeTagsForStorage) {
   const payload = {
     id: input.id,
   };
 
   if (Object.prototype.hasOwnProperty.call(input, 'title')) {
     payload.title = input.title;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(input, 'tags')) {
+    payload.tags = normalizeTagsForStorage(input.tags);
   }
 
   if (Object.prototype.hasOwnProperty.call(input, 'content')) {

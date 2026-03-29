@@ -3,6 +3,7 @@ const toUtcMysqlDatetime = require('../../utils/to-utc-mysql-datetime');
 function makeCreateArticleDataAccess({ logger, mysqlPool, tableName }) {
   return async function createArticleDataAccess({
     title,
+    tags,
     excerpt,
     content,
     coverImage,
@@ -14,13 +15,14 @@ function makeCreateArticleDataAccess({ logger, mysqlPool, tableName }) {
     try {
       const query = `
         INSERT INTO ${tableName}
-          (title, excerpt, content, cover_image, author_name, author_avatar, status, published_at, created_at, updated_at)
+          (title, tags, excerpt, content, cover_image, author_name, author_avatar, status, published_at, created_at, updated_at)
         VALUES
-          (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+          (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
       `;
 
       const [result] = await mysqlPool.query(query, [
         title,
+        tags,
         excerpt,
         content,
         coverImage,

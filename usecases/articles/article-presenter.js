@@ -1,41 +1,49 @@
-const TAG_INFERENCE_RULES = [
-  { tag: 'Engineering', keywords: ['engineering', 'architecture', 'system', 'timeline', 'build'] },
-  { tag: 'Backend', keywords: ['backend', 'api', 'server', 'database', 'mysql'] },
-  { tag: 'React', keywords: ['react', 'frontend', 'ui'] },
-  { tag: 'Kubernetes', keywords: ['kubernetes', 'k8s', 'cluster', 'deployment'] },
-];
+function buildArticlePresenter({ parseTagsFromStorage }) {
+  function presentArticleListItem(article) {
+    const tags = getTags(article);
 
-function presentArticleListItem(article) {
-  return {
-    id: article.id,
-    slug: buildSlug(article.title),
-    title: article.title,
-    excerpt: article.excerpt,
-    tags: inferTags(article),
-    status: normalizeStatus(article.status),
-    publishedAt: toIsoDate(article.publishedAt || article.createdAt),
-    createdAt: toIsoDate(article.createdAt),
-    updatedAt: toIsoDate(article.updatedAt),
-    readTime: estimateReadTime(article.content),
-  };
-}
+    return {
+      id: article.id,
+      slug: buildSlug(article.title),
+      title: article.title,
+      excerpt: article.excerpt,
+      tags,
+      status: normalizeStatus(article.status),
+      publishedAt: toIsoDate(article.publishedAt || article.createdAt),
+      createdAt: toIsoDate(article.createdAt),
+      updatedAt: toIsoDate(article.updatedAt),
+      readTime: estimateReadTime(article.content),
+    };
+  }
 
-function presentArticleDetail(article) {
+  function presentArticleDetail(article) {
+    const tags = getTags(article);
+
+    return {
+      id: article.id,
+      slug: buildSlug(article.title),
+      title: article.title,
+      tags,
+      status: normalizeStatus(article.status),
+      authorName: article.authorName,
+      authorAvatarUrl: article.authorAvatar,
+      coverImage: article.coverImage,
+      publishedAt: toIsoDate(article.publishedAt || article.createdAt),
+      createdAt: toIsoDate(article.createdAt),
+      updatedAt: toIsoDate(article.updatedAt),
+      readTime: estimateReadTime(article.content),
+      excerpt: article.excerpt,
+      content: article.content,
+    };
+  }
+
+  function getTags(article) {
+    return parseTagsFromStorage(article.tags);
+  }
+
   return {
-    id: article.id,
-    slug: buildSlug(article.title),
-    title: article.title,
-    tags: inferTags(article),
-    status: normalizeStatus(article.status),
-    authorName: article.authorName,
-    authorAvatarUrl: article.authorAvatar,
-    coverImage: article.coverImage,
-    publishedAt: toIsoDate(article.publishedAt || article.createdAt),
-    createdAt: toIsoDate(article.createdAt),
-    updatedAt: toIsoDate(article.updatedAt),
-    readTime: estimateReadTime(article.content),
-    excerpt: article.excerpt,
-    content: article.content,
+    presentArticleListItem,
+    presentArticleDetail,
   };
 }
 
@@ -58,15 +66,6 @@ function estimateReadTime(content) {
   return `${minutes} min read`;
 }
 
-function inferTags(article) {
-  const haystack = `${article.title || ''} ${article.excerpt || ''} ${article.content || ''}`.toLowerCase();
-  const tags = TAG_INFERENCE_RULES
-    .filter((rule) => rule.keywords.some((keyword) => haystack.includes(keyword)))
-    .map((rule) => rule.tag);
-
-  return tags;
-}
-
 function toIsoDate(value) {
   if (!value) {
     return null;
@@ -85,6 +84,5 @@ function normalizeStatus(status) {
 }
 
 module.exports = {
-  presentArticleListItem,
-  presentArticleDetail,
+  buildArticlePresenter,
 };

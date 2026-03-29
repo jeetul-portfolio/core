@@ -7,6 +7,7 @@ function makeUpdateArticleDataAccess({ logger, mysqlPool, tableName }) {
       const values = [];
 
       appendAssignment(payload, 'title', 'title', assignments, values);
+      appendAssignment(payload, 'tags', 'tags', assignments, values);
       appendAssignment(payload, 'excerpt', 'excerpt', assignments, values);
       appendAssignment(payload, 'content', 'content', assignments, values);
       appendAssignment(payload, 'coverImage', 'cover_image', assignments, values);

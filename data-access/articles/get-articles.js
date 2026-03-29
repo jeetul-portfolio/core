@@ -23,8 +23,8 @@ function makeGetArticlesDataAccess({ logger, mysqlPool, tableName }) {
 
       if (tag) {
         const tagTerm = `%${tag}%`;
-        whereClauses.push('(title LIKE ? OR excerpt LIKE ? OR content LIKE ?)');
-        params.push(tagTerm, tagTerm, tagTerm);
+        whereClauses.push('(tags LIKE ? OR title LIKE ? OR excerpt LIKE ? OR content LIKE ?)');
+        params.push(tagTerm, tagTerm, tagTerm, tagTerm);
       }
 
       const whereClause = whereClauses.length > 0 ? ` WHERE ${whereClauses.join(' AND ')}` : '';
@@ -33,6 +33,7 @@ function makeGetArticlesDataAccess({ logger, mysqlPool, tableName }) {
         SELECT
           id,
           title,
+          tags,
           excerpt,
           content,
           cover_image AS coverImage,
