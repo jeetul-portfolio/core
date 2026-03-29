@@ -2,14 +2,28 @@ function makeSyncGitDataUsecase({ dataAccess, config, logger, Joi, ValidationErr
   return async function syncGitDataUsecase({ repos, maxCommitsPerRepo } = {}) {
     const validatedInputs = validateInputs({ Joi, ValidationError, repos, maxCommitsPerRepo });
     const syncTimestamp = new Date();
-    const normalizedMaxCommits = validatedInputs.maxCommitsPerRepo || config.github.maxCommitsPerRepo || 100;
+    const maxCommitsInput = validatedInputs.maxCommitsPerRepo ?? config.github.maxCommitsPerRepo;
+    const normalizedMaxCommits = Number(maxCommitsInput) > 0 ? Number(maxCommitsInput) : null;
+
+    logger.info('Git sync started', {
+      startedAt: syncTimestamp.toISOString(),
+      requestedReposCount: Array.isArray(validatedInputs.repos) ? validatedInputs.repos.length : 0,
+      maxCommitsPerRepo: normalizedMaxCommits,
+      mode: normalizedMaxCommits ? 'capped' : 'unlimited',
+    });
 
     if (!config.github.token) {
       throw new ValidationError('GITHUB_TOKEN is required to sync git data from GitHub API.');
     }
 
-    const githubExternalCalls = buildGithubExternalCalls({ config });
+    const githubExternalCalls = buildGithubExternalCalls({ config, logger });
     const authenticatedUser = await githubExternalCalls.getAuthenticatedUser();
+
+    logger.info('GitHub authenticated user resolved for sync', {
+      login: authenticatedUser?.login || null,
+      name: authenticatedUser?.name || null,
+      email: authenticatedUser?.email || null,
+    });
 
     if (!authenticatedUser?.login) {
       throw new ValidationError('Unable to resolve authenticated GitHub user for commit ownership filtering.');
@@ -21,6 +35,11 @@ function makeSyncGitDataUsecase({ dataAccess, config, logger, Joi, ValidationErr
       config,
       logger,
       githubExternalCalls,
+    });
+
+    logger.info('Resolved repositories for git sync', {
+      totalReposToSync: reposToSync.length,
+      projectKeys: reposToSync.map((repo) => repo.projectKey),
     });
 
     if (reposToSync.length === 0) {
@@ -37,7 +56,15 @@ function makeSyncGitDataUsecase({ dataAccess, config, logger, Joi, ValidationErr
     const repoResults = [];
     let totalCommitsUpserted = 0;
 
-    for (const repo of reposToSync) {
+    for (let index = 0; index < reposToSync.length; index += 1) {
+      const repo = reposToSync[index];
+      logger.info('Syncing repository', {
+        progress: `${index + 1}/${reposToSync.length}`,
+        projectKey: repo.projectKey,
+        owner: repo.owner,
+        repo: repo.repo,
+      });
+
       const syncResult = await syncRepository({
         repo,
         normalizedMaxCommits,
@@ -52,6 +79,16 @@ function makeSyncGitDataUsecase({ dataAccess, config, logger, Joi, ValidationErr
       if (syncResult.status === 'success') {
         totalCommitsUpserted += syncResult.commitsInserted + syncResult.commitsUpdated;
       }
+
+      logger.info('Repository sync finished', {
+        progress: `${index + 1}/${reposToSync.length}`,
+        projectKey: repo.projectKey,
+        status: syncResult.status,
+        commitsFetched: syncResult.commitsFetched,
+        commitsInserted: syncResult.commitsInserted,
+        commitsUpdated: syncResult.commitsUpdated,
+        error: syncResult.error,
+      });
 
       repoResults.push(syncResult);
     }
@@ -92,9 +129,21 @@ async function syncRepository({ repo, normalizedMaxCommits, syncTimestamp, dataA
   let projectId;
 
   try {
+    logger.info('Fetching repository metadata from GitHub', {
+      projectKey: repo.projectKey,
+      owner: repo.owner,
+      repo: repo.repo,
+    });
+
     const repositoryData = await githubExternalCalls.getRepository({
       owner: repo.owner,
       repo: repo.repo,
+    });
+
+    logger.info('Repository metadata fetched', {
+      projectKey: repo.projectKey,
+      defaultBranch: repositoryData.default_branch,
+      htmlUrl: repositoryData.html_url,
     });
 
     projectId = await dataAccess.gitProjects.upsertGitProject({
@@ -109,6 +158,12 @@ async function syncRepository({ repo, normalizedMaxCommits, syncTimestamp, dataA
       isStale: false,
     });
 
+    logger.info('Git project upserted', {
+      projectKey: repo.projectKey,
+      projectId,
+      syncStatus: 'partial',
+    });
+
     const commits = await githubExternalCalls.getCommits({
       owner: repo.owner,
       repo: repo.repo,
@@ -117,6 +172,14 @@ async function syncRepository({ repo, normalizedMaxCommits, syncTimestamp, dataA
     });
 
     result.commitsFetched = commits.length;
+
+    logger.info('Commits fetched from GitHub', {
+      projectKey: repo.projectKey,
+      owner: repo.owner,
+      repo: repo.repo,
+      commitsFetched: commits.length,
+      maxCommitsPerRepo: normalizedMaxCommits,
+    });
 
     const commitsWithStats = await enrichCommitsWithStats({
       owner: repo.owner,
@@ -127,9 +190,26 @@ async function syncRepository({ repo, normalizedMaxCommits, syncTimestamp, dataA
       maxConcurrency: config.github.commitStatsConcurrency || 5,
     });
 
+    logger.info('Commit stats enrichment completed', {
+      projectKey: repo.projectKey,
+      owner: repo.owner,
+      repo: repo.repo,
+      commitsConsidered: commitsWithStats.length,
+      maxConcurrency: config.github.commitStatsConcurrency || 5,
+    });
+
     const myCommits = commitsWithStats.filter((commitItem) =>
       isCommitOwnedByAuthenticatedUser({ commitItem, authenticatedUser }),
     );
+
+    logger.info('Commit ownership filter applied', {
+      projectKey: repo.projectKey,
+      owner: repo.owner,
+      repo: repo.repo,
+      commitsMatchedUser: myCommits.length,
+      commitsSkipped: Math.max(0, commitsWithStats.length - myCommits.length),
+      authenticatedUser: authenticatedUser?.login || null,
+    });
 
     const mappedCommits = myCommits.map((commitItem) => ({
       fullHash: commitItem.sha,
@@ -153,6 +233,12 @@ async function syncRepository({ repo, normalizedMaxCommits, syncTimestamp, dataA
       isAccessible: true,
     }));
 
+    logger.info('Prepared commits for upsert', {
+      projectKey: repo.projectKey,
+      projectId,
+      commitsToUpsert: mappedCommits.length,
+    });
+
     const upsertResult = await dataAccess.gitCommits.upsertGitCommitsForProject({
       projectId,
       commits: mappedCommits,
@@ -162,12 +248,26 @@ async function syncRepository({ repo, normalizedMaxCommits, syncTimestamp, dataA
     result.commitsInserted = upsertResult.inserted;
     result.commitsUpdated = upsertResult.updated;
 
+    logger.info('Git commits upserted', {
+      projectKey: repo.projectKey,
+      projectId,
+      inserted: upsertResult.inserted,
+      updated: upsertResult.updated,
+    });
+
     await dataAccess.gitProjects.updateGitProjectSyncStatus({
       projectId,
       syncStatus: 'success',
       lastSyncedAt: syncTimestamp,
       nextSyncAt: null,
       isStale: false,
+    });
+
+    logger.info('Git project sync status updated', {
+      projectKey: repo.projectKey,
+      projectId,
+      syncStatus: 'success',
+      syncedAt: syncTimestamp.toISOString(),
     });
 
     return result;
@@ -198,6 +298,9 @@ async function syncRepository({ repo, normalizedMaxCommits, syncTimestamp, dataA
 
 async function resolveReposToSync({ validatedRepos, dataAccess, config, logger, githubExternalCalls }) {
   if (Array.isArray(validatedRepos) && validatedRepos.length > 0) {
+    logger.info('Using explicitly requested repositories for git sync', {
+      totalValidatedRepos: validatedRepos.length,
+    });
     return validatedRepos.map((repo) => normalizeRepoInput(repo));
   }
 
@@ -210,6 +313,9 @@ async function resolveReposToSync({ validatedRepos, dataAccess, config, logger, 
   });
 
   if (fromDatabase.length > 0) {
+    logger.info('Loaded repositories from database for git sync', {
+      totalDatabaseRepos: fromDatabase.length,
+    });
     mergedRepos.push(
       ...fromDatabase.map((project) => ({
         projectKey: project.projectKey,
@@ -246,6 +352,11 @@ async function resolveReposToSync({ validatedRepos, dataAccess, config, logger, 
     dedupedByProjectKey.set(normalized.projectKey, normalized);
   });
 
+  logger.info('Repository deduplication completed for git sync', {
+    mergedRepoCandidates: mergedRepos.length,
+    dedupedRepos: dedupedByProjectKey.size,
+  });
+
   return Array.from(dedupedByProjectKey.values());
 }
 
@@ -261,7 +372,8 @@ function validateInputs({ Joi, ValidationError, repos, maxCommitsPerRepo }) {
         }),
       )
       .default([]),
-    maxCommitsPerRepo: Joi.number().integer().min(1).max(500).optional(),
+    // 0 means no limit and will sync all available commits.
+    maxCommitsPerRepo: Joi.number().integer().min(0).max(1000).optional(),
   });
 
   const validatedResponse = schema.validate({ repos, maxCommitsPerRepo });
@@ -393,8 +505,19 @@ function normalizeIdentity(value) {
 
 async function enrichCommitsWithStats({ owner, repo, commits, githubExternalCalls, logger, maxConcurrency = 5 }) {
   if (!Array.isArray(commits) || commits.length === 0) {
+    logger.info('Skipping commit stats enrichment because commit list is empty', {
+      owner,
+      repo,
+    });
     return [];
   }
+
+  logger.info('Starting commit stats enrichment', {
+    owner,
+    repo,
+    totalCommits: commits.length,
+    maxConcurrency,
+  });
 
   const tasks = commits.map((commit, index) => async () => {
     try {
