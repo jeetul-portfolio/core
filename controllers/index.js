@@ -8,6 +8,7 @@ const buildRolesController = require('./roles');
 const buildProfileController = require('./profile');
 const buildSkillsController = require('./skills');
 const buildCategoriesController = require('./categories');
+const buildTagsController = require('./tags');
 const { formatResponse, formatError } = require('./response-formatter');
 
 module.exports = function(dependencies) {
@@ -29,5 +30,6 @@ module.exports = function(dependencies) {
     profileController: buildProfileController(controllerDependencies),
     skillsController: buildSkillsController(controllerDependencies),
     categoriesController: buildCategoriesController(controllerDependencies),
+    tagsController: buildTagsController(controllerDependencies),
   };
 };

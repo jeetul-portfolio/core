@@ -1,4 +1,4 @@
-function makeUpdateProfileUsecase({ dataAccess, presentProfile }) {
+function makeUpdateProfileUsecase({ dataAccess, presentProfile, syncEntityTags }) {
   return async function updateProfileUsecase(payload) {
     const {
       fullName,
@@ -47,6 +47,16 @@ function makeUpdateProfileUsecase({ dataAccess, presentProfile }) {
     });
 
     const updated = await dataAccess.profiles.findProfileByUserId();
+
+    if (syncEntityTags && updated) {
+      await syncEntityTags({
+        entityType: 'profile',
+        entityId: updated.id,
+        explicitTags: [],
+        textFields: [updated.bio],
+      });
+    }
+
     return presentProfile(updated);
   };
 }

@@ -1,4 +1,4 @@
-function makeDeleteSkillUsecase({ dataAccess, NotFoundError }) {
+function makeDeleteSkillUsecase({ dataAccess, NotFoundError, syncEntityTags }) {
   return async function deleteSkillUsecase({ id }) {
     const existing = await dataAccess.skills.getSkillById({ id });
 
@@ -10,6 +10,7 @@ function makeDeleteSkillUsecase({ dataAccess, NotFoundError }) {
     // but we delete explicitly for clarity and portability.
     await dataAccess.skillReferences.deleteBySkillId({ skillId: id });
     await dataAccess.skillCategories.deleteBySkillId({ skillId: id });
+    await dataAccess.tagReferences.deleteByEntity({ entityType: 'skill', entityId: id });
     await dataAccess.skills.deleteSkill({ id });
 
     return { id, deleted: true };

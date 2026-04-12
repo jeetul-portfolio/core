@@ -4,10 +4,24 @@ function makeCreateArticleUsecase({
   presentArticleDetail,
   buildExcerpt,
   normalizeTagsForStorage,
+  syncEntityTags,
 }) {
   return async function createArticleUsecase(input) {
     const payload = buildPayload(input, buildExcerpt, normalizeTagsForStorage);
     const created = await dataAccess.articles.createArticle(payload);
+
+    if (syncEntityTags) {
+      const explicitTags = Array.isArray(input.tags)
+        ? input.tags
+        : typeof input.tags === 'string' ? input.tags.split(',').map((t) => t.trim()).filter(Boolean) : [];
+      await syncEntityTags({
+        entityType: 'article',
+        entityId: created.id,
+        explicitTags,
+        textFields: [input.content],
+      });
+    }
+
     const article = await getArticleById({ id: created.id, includeDrafts: true });
 
     return presentArticleDetail(article);

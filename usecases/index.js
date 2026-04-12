@@ -8,18 +8,24 @@ const buildRolesUsecase = require('./roles');
 const buildProfileUsecase = require('./profile');
 const buildSkillsUsecase = require('./skills');
 const buildCategoriesUsecase = require('./categories');
+const buildTagsUsecase = require('./tags');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { AuthenticationError, ForbiddenError } = require('../exceptions');
 
 module.exports = function(dependencies) {
+  // Build tags usecase first so syncEntityTags can be injected into other usecases
+  const tagsUsecase = buildTagsUsecase(dependencies);
+  const { syncEntityTags } = tagsUsecase;
+  const depsWithSync = { ...dependencies, syncEntityTags };
+
   return {
     sampleUsecase: {
       getSampleData: buildSampleUsecase(dependencies),
     },
     gitUsecase: buildGitUsecase(dependencies),
-    articlesUsecase: buildArticlesUsecase(dependencies),
+    articlesUsecase: buildArticlesUsecase(depsWithSync),
     authUsecase: buildAuthUsecase({
       ...dependencies,
       jwt,
@@ -30,9 +36,10 @@ module.exports = function(dependencies) {
     }),
     usersUsecase: buildUsersUsecase(dependencies),
     rolesUsecase: buildRolesUsecase(dependencies),
-    profileUsecase: buildProfileUsecase(dependencies),
-    skillsUsecase: buildSkillsUsecase(dependencies),
+    profileUsecase: buildProfileUsecase(depsWithSync),
+    skillsUsecase: buildSkillsUsecase(depsWithSync),
     categoriesUsecase: buildCategoriesUsecase(dependencies),
+    tagsUsecase,
   };
 };
 

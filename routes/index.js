@@ -8,6 +8,7 @@ const rolesRoutes = require('./roles-routes');
 const profileRoutes = require('./profile-routes');
 const skillsRoutes = require('./skills-routes');
 const categoriesRoutes = require('./categories-routes');
+const tagsRoutes = require('./tags-routes');
 
 function buildRoutes({ controller, express, middlewares }) {
   const sample = sampleRoutes({ controller, router: express.Router(), middlewares });
@@ -19,6 +20,7 @@ function buildRoutes({ controller, express, middlewares }) {
   const profile = profileRoutes({ controller, router: express.Router(), middlewares });
   const skills = skillsRoutes({ controller, router: express.Router(), middlewares });
   const categories = categoriesRoutes({ controller, router: express.Router(), middlewares });
+  const tags = tagsRoutes({ controller, router: express.Router(), middlewares });
 
   return {
     sample,
@@ -30,6 +32,7 @@ function buildRoutes({ controller, express, middlewares }) {
     profile,
     skills,
     categories,
+    tags,
   };
 }
 

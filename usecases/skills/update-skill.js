@@ -1,4 +1,4 @@
-function makeUpdateSkillUsecase({ dataAccess, getSkillById, NotFoundError }) {
+function makeUpdateSkillUsecase({ dataAccess, getSkillById, NotFoundError, syncEntityTags }) {
   return async function updateSkillUsecase(input) {
     const existing = await dataAccess.skills.getSkillById({ id: input.id });
 
@@ -25,6 +25,16 @@ function makeUpdateSkillUsecase({ dataAccess, getSkillById, NotFoundError }) {
       const normalizedCategoryIds = normalizeCategoryIds(input.categoryIds);
       await dataAccess.skillCategories.deleteBySkillId({ skillId: input.id });
       await dataAccess.skillCategories.insertCategoryLinks({ skillId: input.id, categoryIds: normalizedCategoryIds });
+    }
+
+    if (syncEntityTags && Object.prototype.hasOwnProperty.call(input, 'notes')) {
+      const latestSkill = await getSkillById({ id: input.id });
+      await syncEntityTags({
+        entityType: 'skill',
+        entityId: input.id,
+        explicitTags: [],
+        textFields: [latestSkill.notes],
+      });
     }
 
     return getSkillById({ id: input.id });

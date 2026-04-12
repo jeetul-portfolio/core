@@ -1,4 +1,4 @@
-function makePatchProfileUsecase({ dataAccess, presentProfile, NotFoundError }) {
+function makePatchProfileUsecase({ dataAccess, presentProfile, NotFoundError, syncEntityTags }) {
   return async function patchProfileUsecase({ id, ...payload }) {
     const existing = await dataAccess.profiles.findProfileById({ id });
 
@@ -24,6 +24,16 @@ function makePatchProfileUsecase({ dataAccess, presentProfile, NotFoundError }) 
     });
 
     const updated = await dataAccess.profiles.findProfileById({ id });
+
+    if (syncEntityTags && updated && Object.prototype.hasOwnProperty.call(payload, 'bio')) {
+      await syncEntityTags({
+        entityType: 'profile',
+        entityId: id,
+        explicitTags: [],
+        textFields: [updated.bio],
+      });
+    }
+
     return presentProfile(updated);
   };
 }

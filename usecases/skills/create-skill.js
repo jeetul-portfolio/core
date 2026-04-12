@@ -1,4 +1,4 @@
-function makeCreateSkillUsecase({ dataAccess, getSkillById }) {
+function makeCreateSkillUsecase({ dataAccess, getSkillById, syncEntityTags }) {
   return async function createSkillUsecase({ name, categoryIds, level, notes, sortOrder, references }) {
     const created = await dataAccess.skills.createSkill({
       name: String(name).trim(),
@@ -14,6 +14,15 @@ function makeCreateSkillUsecase({ dataAccess, getSkillById }) {
     await dataAccess.skillReferences.insertReferences({ skillId: created.id, references: normalizedRefs });
     await dataAccess.skillCategories.deleteBySkillId({ skillId: created.id });
     await dataAccess.skillCategories.insertCategoryLinks({ skillId: created.id, categoryIds: normalizedCategoryIds });
+
+    if (syncEntityTags) {
+      await syncEntityTags({
+        entityType: 'skill',
+        entityId: created.id,
+        explicitTags: [],
+        textFields: [notes],
+      });
+    }
 
     return getSkillById({ id: created.id });
   };

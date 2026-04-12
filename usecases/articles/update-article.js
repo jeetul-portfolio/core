@@ -4,6 +4,7 @@ function makeUpdateArticleUsecase({
   presentArticleDetail,
   buildExcerpt,
   normalizeTagsForStorage,
+  syncEntityTags,
 }) {
   return async function updateArticleUsecase(input) {
     const payload = buildPayload(input, buildExcerpt, normalizeTagsForStorage);
@@ -20,6 +21,23 @@ function makeUpdateArticleUsecase({
 
     if (!article) {
       throw new NotFoundError(`Article not found for id ${input.id}`);
+    }
+
+    if (syncEntityTags) {
+      const explicitTags = Object.prototype.hasOwnProperty.call(input, 'tags')
+        ? Array.isArray(input.tags)
+          ? input.tags
+          : typeof input.tags === 'string' ? input.tags.split(',').map((t) => t.trim()).filter(Boolean) : []
+        : undefined;
+
+      if (explicitTags !== undefined || Object.prototype.hasOwnProperty.call(input, 'content')) {
+        await syncEntityTags({
+          entityType: 'article',
+          entityId: input.id,
+          explicitTags: explicitTags || [],
+          textFields: [article.content],
+        });
+      }
     }
 
     return presentArticleDetail(article);

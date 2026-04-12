@@ -1,5 +1,6 @@
 const makeFindProfileByUserId = require('./find-profile-by-user-id');
 const makeFindProfileById = require('./find-profile-by-id');
+const makeGetProfilesByIds = require('./get-profiles-by-ids');
 const makeFindPublicProfile = require('./find-public-profile');
 const makeUpsertProfileByUserId = require('./upsert-profile-by-user-id');
 const makeGetProfiles = require('./get-profiles');
@@ -17,5 +18,6 @@ module.exports = function buildProfilesDataAccess(dependencies) {
     deleteProfile: makeDeleteProfile(dependencies),
     createProfile: makeCreateProfile(dependencies),
     updateProfileById: makeUpdateProfileById(dependencies),
+    getProfilesByIds: makeGetProfilesByIds(dependencies),
   };
 };
