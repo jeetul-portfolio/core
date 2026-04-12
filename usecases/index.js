@@ -6,6 +6,8 @@ const buildAuthUsecase = require('./auth');
 const buildUsersUsecase = require('./users');
 const buildRolesUsecase = require('./roles');
 const buildProfileUsecase = require('./profile');
+const buildSkillsUsecase = require('./skills');
+const buildCategoriesUsecase = require('./categories');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
@@ -29,6 +31,8 @@ module.exports = function(dependencies) {
     usersUsecase: buildUsersUsecase(dependencies),
     rolesUsecase: buildRolesUsecase(dependencies),
     profileUsecase: buildProfileUsecase(dependencies),
+    skillsUsecase: buildSkillsUsecase(dependencies),
+    categoriesUsecase: buildCategoriesUsecase(dependencies),
   };
 };
 

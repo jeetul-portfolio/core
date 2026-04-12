@@ -23,7 +23,7 @@ function makeGetArticlesController({ usecase, formatResponse, formatError, logge
 function validateInputs({ Joi, ValidationError, page, pageSize, search, tag, includeDrafts }) {
   const schema = Joi.object({
     page: Joi.number().integer().min(1).default(1),
-    pageSize: Joi.number().integer().min(1).max(100).default(10),
+    pageSize: Joi.number().integer().min(1).max(500).default(10),
     search: Joi.string().trim().allow('').default(''),
     tag: Joi.string().trim().max(80).optional(),
     includeDrafts: Joi.boolean().truthy('true').truthy('1').falsy('false').falsy('0').default(false),

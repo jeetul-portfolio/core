@@ -6,6 +6,8 @@ const buildAuthController = require('./auth');
 const buildUsersController = require('./users');
 const buildRolesController = require('./roles');
 const buildProfileController = require('./profile');
+const buildSkillsController = require('./skills');
+const buildCategoriesController = require('./categories');
 const { formatResponse, formatError } = require('./response-formatter');
 
 module.exports = function(dependencies) {
@@ -25,5 +27,7 @@ module.exports = function(dependencies) {
     usersController: buildUsersController(controllerDependencies),
     rolesController: buildRolesController(controllerDependencies),
     profileController: buildProfileController(controllerDependencies),
+    skillsController: buildSkillsController(controllerDependencies),
+    categoriesController: buildCategoriesController(controllerDependencies),
   };
 };

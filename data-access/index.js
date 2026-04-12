@@ -9,6 +9,10 @@ const buildUsersDataAccess = require('./users');
 const buildRolesDataAccess = require('./roles');
 const buildUserRolesDataAccess = require('./user-roles');
 const buildProfilesDataAccess = require('./profiles');
+const buildSkillsDataAccess = require('./skills');
+const buildSkillReferencesDataAccess = require('./skill-references');
+const buildCategoriesDataAccess = require('./categories');
+const buildSkillCategoriesDataAccess = require('./skill-categories');
 const mysql = require('mysql2/promise');
 
 module.exports = function buildDataAccess(dependencies) {
@@ -37,6 +41,10 @@ module.exports = function buildDataAccess(dependencies) {
   const roles = buildRolesDataAccess(dataAccessDependencies);
   const userRoles = buildUserRolesDataAccess(dataAccessDependencies);
   const profiles = buildProfilesDataAccess(dataAccessDependencies);
+  const skills = buildSkillsDataAccess(dataAccessDependencies);
+  const skillReferences = buildSkillReferencesDataAccess(dataAccessDependencies);
+  const categories = buildCategoriesDataAccess(dataAccessDependencies);
+  const skillCategories = buildSkillCategoriesDataAccess(dataAccessDependencies);
 
   return {
     getSampleData: getSampleData(dataAccessDependencies),
@@ -49,5 +57,9 @@ module.exports = function buildDataAccess(dependencies) {
     roles,
     userRoles,
     profiles,
+    skills,
+    skillReferences,
+    categories,
+    skillCategories,
   };
 };
