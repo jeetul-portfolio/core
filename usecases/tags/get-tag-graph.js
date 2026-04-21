@@ -10,9 +10,16 @@
  */
 function makeGetTagGraphUsecase({ dataAccess }) {
   return async function getTagGraphUsecase() {
-    const { tags, references } = await dataAccess.tags.getTagGraph();
+    const { tags: allTags, references } = await dataAccess.tags.getTagGraph();
 
-    if (references.length === 0) {
+    // Filter out internal tags — they should not appear in the public graph
+    const tags = allTags.filter((t) => !t.isInternal);
+    const visibleTagIds = new Set(tags.map((t) => t.id));
+
+    // Remove references that point to filtered-out internal tags
+    const visibleRefs = references.filter((r) => visibleTagIds.has(r.tagId));
+
+    if (visibleRefs.length === 0) {
       return {
         nodes: tags.map((t) => buildTagNode(t)),
         links: [],
@@ -20,7 +27,7 @@ function makeGetTagGraphUsecase({ dataAccess }) {
     }
 
     // Collect entity ids per entity type to batch-fetch labels
-    const entityMap = groupByType(references);
+    const entityMap = groupByType(visibleRefs);
 
     const entityLabelMap = await resolveEntityLabels(entityMap, dataAccess);
 
@@ -32,7 +39,7 @@ function makeGetTagGraphUsecase({ dataAccess }) {
       nodeSet.set(nodeId, buildTagNode(tag));
     }
 
-    for (const ref of references) {
+    for (const ref of visibleRefs) {
       const tagNodeId = `tag-${ref.tagId}`;
       const entityNodeId = `${ref.entityType}-${ref.entityId}`;
 

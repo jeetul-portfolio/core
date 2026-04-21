@@ -2,7 +2,7 @@ function makeGetTagGraphDataAccess({ logger, mysqlPool, tableName }) {
   return async function getTagGraphDataAccess() {
     try {
       const [tags] = await mysqlPool.query(
-        `SELECT id, name, slug, \`group\`, color FROM ${tableName} ORDER BY name ASC`
+        `SELECT id, name, slug, \`group\`, color, is_internal AS isInternal FROM ${tableName} ORDER BY name ASC`
       );
 
       const [references] = await mysqlPool.query(

@@ -1,6 +1,7 @@
 function tagsRoutes({ controller, router, middlewares }) {
   router.get('/tags', controller.tagsController.getTags);
   router.get('/tags/graph', controller.tagsController.getTagGraph);
+  router.get('/tags/seo-meta', controller.tagsController.getSeoTags);
   router.get('/tags/:id', controller.tagsController.getTagById);
   router.post(
     '/tags',

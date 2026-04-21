@@ -10,7 +10,9 @@ function makeUpdateTagController({ usecase, formatResponse, formatError, logger,
         group: Joi.string().trim().max(50).allow(null, '').optional(),
         color: Joi.string().trim().max(20).allow(null, '').optional(),
         description: Joi.string().trim().max(1000).allow(null, '').optional(),
-      }).or('name', 'group', 'color', 'description');
+        isSeoEnabled: Joi.boolean().optional(),
+        isInternal: Joi.boolean().optional(),
+      }).or('name', 'group', 'color', 'description', 'isSeoEnabled', 'isInternal');
 
       const { error: bodyError, value: bodyValue } = bodySchema.validate(req.body || {});
       if (bodyError) throw new ValidationError(bodyError.message);

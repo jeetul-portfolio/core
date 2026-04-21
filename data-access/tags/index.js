@@ -4,6 +4,7 @@ const makeFindOrCreateTagDataAccess = require('./find-or-create-tag');
 const makeUpdateTagDataAccess = require('./update-tag');
 const makeDeleteTagDataAccess = require('./delete-tag');
 const makeGetTagGraphDataAccess = require('./get-tag-graph');
+const makeGetSeoTagsDataAccess = require('./get-seo-tags');
 
 const TABLE_NAME = 'tags';
 
@@ -17,5 +18,6 @@ module.exports = function buildTagsDataAccess(dependencies) {
     updateTag: makeUpdateTagDataAccess(deps),
     deleteTag: makeDeleteTagDataAccess(deps),
     getTagGraph: makeGetTagGraphDataAccess(deps),
+    getSeoTags: makeGetSeoTagsDataAccess(deps),
   };
 };

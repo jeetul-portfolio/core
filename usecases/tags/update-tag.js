@@ -17,6 +17,8 @@ function makeUpdateTagUsecase({ dataAccess, NotFoundError }) {
     if (Object.prototype.hasOwnProperty.call(input, 'group')) payload.group = input.group;
     if (Object.prototype.hasOwnProperty.call(input, 'color')) payload.color = input.color;
     if (Object.prototype.hasOwnProperty.call(input, 'description')) payload.description = input.description;
+    if (Object.prototype.hasOwnProperty.call(input, 'isSeoEnabled')) payload.isSeoEnabled = input.isSeoEnabled;
+    if (Object.prototype.hasOwnProperty.call(input, 'isInternal')) payload.isInternal = input.isInternal;
 
     await dataAccess.tags.updateTag(payload);
 

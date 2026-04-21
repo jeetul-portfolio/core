@@ -9,6 +9,8 @@ function makeGetTagByIdDataAccess({ logger, mysqlPool, tableName }) {
           t.\`group\`,
           t.color,
           t.description,
+          t.is_seo_enabled AS isSeoEnabled,
+          t.is_internal AS isInternal,
           t.created_at AS createdAt,
           t.updated_at AS updatedAt,
           COUNT(tr.id) AS usageCount

@@ -14,6 +14,8 @@ function makeUpdateTagDataAccess({ logger, mysqlPool, tableName }) {
       if (Object.prototype.hasOwnProperty.call(input, 'group')) appendAssignment('`group`', input.group);
       if (Object.prototype.hasOwnProperty.call(input, 'color')) appendAssignment('color', input.color);
       if (Object.prototype.hasOwnProperty.call(input, 'description')) appendAssignment('description', input.description);
+      if (Object.prototype.hasOwnProperty.call(input, 'isSeoEnabled')) appendAssignment('is_seo_enabled', input.isSeoEnabled ? 1 : 0);
+      if (Object.prototype.hasOwnProperty.call(input, 'isInternal')) appendAssignment('is_internal', input.isInternal ? 1 : 0);
 
       if (assignments.length === 0) {
         return false;

@@ -6,6 +6,8 @@ function makeCreateTagController({ usecase, formatResponse, formatError, logger,
         group: Joi.string().trim().max(50).allow(null, '').optional(),
         color: Joi.string().trim().max(20).allow(null, '').optional(),
         description: Joi.string().trim().max(1000).allow(null, '').optional(),
+        isSeoEnabled: Joi.boolean().optional(),
+        isInternal: Joi.boolean().optional(),
       });
 
       const { error, value } = schema.validate(req.body || {});

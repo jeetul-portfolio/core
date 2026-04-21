@@ -5,6 +5,7 @@ const makeUpdateTagUsecase = require('./update-tag');
 const makeDeleteTagUsecase = require('./delete-tag');
 const makeGetTagGraphUsecase = require('./get-tag-graph');
 const makeSyncEntityTagsUsecase = require('./sync-entity-tags');
+const makeGetSeoTagsUsecase = require('./get-seo-tags');
 const { NotFoundError } = require('../../exceptions');
 
 module.exports = function buildTagsUsecase(dependencies) {
@@ -18,5 +19,6 @@ module.exports = function buildTagsUsecase(dependencies) {
     deleteTag: makeDeleteTagUsecase(usecaseDeps),
     getTagGraph: makeGetTagGraphUsecase(usecaseDeps),
     syncEntityTags: makeSyncEntityTagsUsecase(usecaseDeps),
+    getSeoTags: makeGetSeoTagsUsecase(usecaseDeps),
   };
 };

@@ -7,6 +7,8 @@ function presentTag(row) {
     color: row.color || null,
     description: row.description || null,
     usageCount: Number(row.usageCount) || 0,
+    isSeoEnabled: Boolean(row.isSeoEnabled),
+    isInternal: Boolean(row.isInternal),
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
