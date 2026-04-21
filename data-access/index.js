@@ -15,6 +15,7 @@ const buildCategoriesDataAccess = require('./categories');
 const buildSkillCategoriesDataAccess = require('./skill-categories');
 const buildTagsDataAccess = require('./tags');
 const buildTagReferencesDataAccess = require('./tag-references');
+const buildUserPreferencesDataAccess = require('./user-preferences');
 const mysql = require('mysql2/promise');
 
 module.exports = function buildDataAccess(dependencies) {
@@ -49,6 +50,7 @@ module.exports = function buildDataAccess(dependencies) {
   const skillCategories = buildSkillCategoriesDataAccess(dataAccessDependencies);
   const tags = buildTagsDataAccess(dataAccessDependencies);
   const tagReferences = buildTagReferencesDataAccess(dataAccessDependencies);
+  const userPreferences = buildUserPreferencesDataAccess(dataAccessDependencies);
 
   return {
     getSampleData: getSampleData(dataAccessDependencies),
@@ -67,5 +69,6 @@ module.exports = function buildDataAccess(dependencies) {
     skillCategories,
     tags,
     tagReferences,
+    userPreferences,
   };
 };

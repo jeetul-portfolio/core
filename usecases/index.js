@@ -9,6 +9,7 @@ const buildProfileUsecase = require('./profile');
 const buildSkillsUsecase = require('./skills');
 const buildCategoriesUsecase = require('./categories');
 const buildTagsUsecase = require('./tags');
+const buildUserPreferencesUsecase = require('./user-preferences');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
@@ -40,6 +41,7 @@ module.exports = function(dependencies) {
     skillsUsecase: buildSkillsUsecase(depsWithSync),
     categoriesUsecase: buildCategoriesUsecase(dependencies),
     tagsUsecase,
+    userPreferencesUsecase: buildUserPreferencesUsecase(dependencies),
   };
 };
 
