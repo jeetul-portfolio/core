@@ -28,7 +28,13 @@
         "port": 8080,
         "targetPort": 8080
       },
-      "configMounts": []
+      "configMounts": [],
+      "pvcMounts": [
+        {
+          "claimName": "shared-resume-pvc",
+          "mountPath": "/app/assets/resume"
+        }
+      ]
     }
   ]
 }

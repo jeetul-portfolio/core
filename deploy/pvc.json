@@ -1,0 +1,11 @@
+{
+  "pvcs": [
+    {
+      "name": "shared-resume-pvc",
+      "namespace": "portfolio",
+      "storage": "5Gi",
+      "accessModes": ["ReadWriteOnce"],
+      "storageClassName": "local-path"
+    }
+  ]
+}
