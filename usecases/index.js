@@ -10,6 +10,7 @@ const buildSkillsUsecase = require('./skills');
 const buildCategoriesUsecase = require('./categories');
 const buildTagsUsecase = require('./tags');
 const buildUserPreferencesUsecase = require('./user-preferences');
+const buildResumesUsecase = require('./resumes');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
@@ -42,6 +43,7 @@ module.exports = function(dependencies) {
     categoriesUsecase: buildCategoriesUsecase(dependencies),
     tagsUsecase,
     userPreferencesUsecase: buildUserPreferencesUsecase(dependencies),
+    resumesUsecase: buildResumesUsecase(dependencies),
   };
 };
 

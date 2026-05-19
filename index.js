@@ -18,7 +18,10 @@ app.use(express.json());
 app.use(container.globalMiddleware);
 app.use(container.responseTimeMiddleware);
 
-// 3. Mount your route registry (which handles /health and /apis)
+// 3. Serve uploaded resume files from the shared PVC
+app.use('/apis/core/assets/resume', express.static('/app/assets/resume'));
+
+// 4. Mount your route registry (which handles /health and /apis)
 app.use(container.registry);
 
 // 4. Catch-all for 404 Route Not Found
