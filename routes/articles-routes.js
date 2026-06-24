@@ -19,6 +19,12 @@ function articlesRoutes({ controller, router, middlewares }) {
     middlewares.authorize(['admin']),
     controller.articlesController.deleteArticle
   );
+  router.patch(
+    '/articles/:id/publish',
+    middlewares.authenticate,
+    middlewares.authorize(['admin', 'editor']),
+    controller.articlesController.publishArticle
+  );
 
   return router;
 }

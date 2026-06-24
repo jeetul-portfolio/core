@@ -3,6 +3,7 @@ const makeGetArticleByIdController = require('./get-article-by-id');
 const makeCreateArticleController = require('./create-article');
 const makeUpdateArticleController = require('./update-article');
 const makeDeleteArticleController = require('./delete-article');
+const makePublishArticleController = require('./publish-article');
 const Joi = require('joi');
 const { ValidationError } = require('../../exceptions');
 
@@ -19,5 +20,6 @@ module.exports = function buildArticlesController(dependencies) {
     createArticle: makeCreateArticleController(controllerDependencies),
     updateArticle: makeUpdateArticleController(controllerDependencies),
     deleteArticle: makeDeleteArticleController(controllerDependencies),
+    publishArticle: makePublishArticleController(controllerDependencies),
   };
 };

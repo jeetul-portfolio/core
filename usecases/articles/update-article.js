@@ -7,7 +7,12 @@ function makeUpdateArticleUsecase({
   syncEntityTags,
 }) {
   return async function updateArticleUsecase(input) {
-    const payload = buildPayload(input, buildExcerpt, normalizeTagsForStorage);
+    const current = await dataAccess.articles.getArticleById({ id: input.id, includeDrafts: true });
+    if (!current) {
+      throw new NotFoundError(`Article not found for id ${input.id}`);
+    }
+
+    const payload = buildPayload(input, buildExcerpt, normalizeTagsForStorage, current.status);
     const updated = await dataAccess.articles.updateArticle(payload);
 
     if (!updated) {
@@ -31,11 +36,17 @@ function makeUpdateArticleUsecase({
         : undefined;
 
       if (explicitTags !== undefined || Object.prototype.hasOwnProperty.call(input, 'content')) {
+        const contentToScan = Object.prototype.hasOwnProperty.call(input, 'content')
+          ? input.content
+          : article.content;
+
+        const doubleHashTags = extractTagRefs(contentToScan);
+
         await syncEntityTags({
           entityType: 'article',
           entityId: input.id,
-          explicitTags: explicitTags || [],
-          textFields: [article.content],
+          explicitTags: [...(explicitTags || []), ...doubleHashTags],
+          textFields: [],
         });
       }
     }
@@ -44,7 +55,7 @@ function makeUpdateArticleUsecase({
   };
 }
 
-function buildPayload(input, buildExcerpt, normalizeTagsForStorage) {
+function buildPayload(input, buildExcerpt, normalizeTagsForStorage, currentStatus) {
   const payload = {
     id: input.id,
   };
@@ -84,11 +95,23 @@ function buildPayload(input, buildExcerpt, normalizeTagsForStorage) {
     payload.publishedAt = normalizeNullable(input.publishedAt);
   }
 
-  if (payload.status === 'published' && !payload.publishedAt) {
+  const alreadyPublished = (currentStatus || '').toLowerCase() === 'published';
+  if (payload.status === 'published' && !payload.publishedAt && !alreadyPublished) {
     payload.publishedAt = new Date().toISOString();
   }
 
   return payload;
+}
+
+function extractTagRefs(content) {
+  if (!content || typeof content !== 'string') return [];
+  const pattern = /##([a-zA-Z][\w-]*)/g;
+  const found = new Set();
+  let match;
+  while ((match = pattern.exec(content)) !== null) {
+    found.add(match[1].toLowerCase());
+  }
+  return Array.from(found);
 }
 
 function normalizeNullable(value) {
