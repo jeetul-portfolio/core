@@ -6,19 +6,19 @@ function tagsRoutes({ controller, router, middlewares }) {
   router.post(
     '/tags',
     middlewares.authenticate,
-    middlewares.authorize(['admin']),
+    middlewares.authorize(['admin', 'service']),
     controller.tagsController.createTag
   );
   router.patch(
     '/tags/:id',
     middlewares.authenticate,
-    middlewares.authorize(['admin']),
+    middlewares.authorize(['admin', 'service']),
     controller.tagsController.updateTag
   );
   router.delete(
     '/tags/:id',
     middlewares.authenticate,
-    middlewares.authorize(['admin']),
+    middlewares.authorize(['admin', 'service']),
     controller.tagsController.deleteTag
   );
 

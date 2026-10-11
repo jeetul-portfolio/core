@@ -5,21 +5,21 @@ function categoriesRoutes({ controller, router, middlewares }) {
   router.post(
     '/categories',
     middlewares.authenticate,
-    middlewares.authorize(['admin']),
+    middlewares.authorize(['admin', 'service']),
     controller.categoriesController.createCategory
   );
 
   router.put(
     '/categories/:id',
     middlewares.authenticate,
-    middlewares.authorize(['admin']),
+    middlewares.authorize(['admin', 'service']),
     controller.categoriesController.updateCategory
   );
 
   router.delete(
     '/categories/:id',
     middlewares.authenticate,
-    middlewares.authorize(['admin']),
+    middlewares.authorize(['admin', 'service']),
     controller.categoriesController.deleteCategory
   );
 

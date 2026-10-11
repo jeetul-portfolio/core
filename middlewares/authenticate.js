@@ -1,5 +1,25 @@
+// In-cluster service-to-service calls (e.g. the MCP server) send this header instead of a token.
+// The public service-request-router strips it, so it can only originate inside the cluster.
+const INTERNAL_SCOPES_HEADER = 'x-internal-scopes';
+// Scope -> role granted to internal callers. 'service' is accepted only on content routes.
+const INTERNAL_SCOPE_ROLES = { 'portfolio:admin': 'service' };
+
 function makeAuthenticateMiddleware({ jwt, config, AuthenticationError, dataAccess }) {
   return async function authenticate(req, res, next) {
+    const internalScopes = req.headers[INTERNAL_SCOPES_HEADER];
+    if (internalScopes !== undefined) {
+      const roles = String(internalScopes)
+        .split(/[\s,]+/)
+        .map((scope) => INTERNAL_SCOPE_ROLES[scope])
+        .filter(Boolean);
+      if (roles.length === 0) {
+        const error = new AuthenticationError('No recognised internal scope');
+        return res.status(error.httpStatusCode || 401).json({ message: error.message, name: error.name });
+      }
+      req.auth = { sub: 'internal', roles: [...new Set(roles)], isInternal: true };
+      return next();
+    }
+
     const authHeader = req.headers.authorization || '';
     const [scheme, token] = authHeader.split(' ');
 
@@ -12,7 +32,7 @@ function makeAuthenticateMiddleware({ jwt, config, AuthenticationError, dataAcce
     }
 
     try {
-      const payload = jwt.verify(token, config.auth.accessTokenSecret);
+      const payload = jwt.verify(token, config.auth.accessTokenSecret, { algorithms: ['HS256'] });
 
       const userId = Number(payload?.sub);
       if (!Number.isFinite(userId) || userId <= 0) {

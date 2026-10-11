@@ -17,6 +17,9 @@ const buildTagsDataAccess = require('./tags');
 const buildTagReferencesDataAccess = require('./tag-references');
 const buildUserPreferencesDataAccess = require('./user-preferences');
 const buildResumesDataAccess = require('./resumes');
+const buildOAuthClientsDataAccess = require('./oauth-clients');
+const buildOAuthAuthorizationCodesDataAccess = require('./oauth-authorization-codes');
+const buildOAuthRefreshTokensDataAccess = require('./oauth-refresh-tokens');
 const mysql = require('mysql2/promise');
 
 module.exports = function buildDataAccess(dependencies) {
@@ -53,6 +56,9 @@ module.exports = function buildDataAccess(dependencies) {
   const tagReferences = buildTagReferencesDataAccess(dataAccessDependencies);
   const userPreferences = buildUserPreferencesDataAccess(dataAccessDependencies);
   const resumes = buildResumesDataAccess(dataAccessDependencies);
+  const oauthClients = buildOAuthClientsDataAccess(dataAccessDependencies);
+  const oauthAuthorizationCodes = buildOAuthAuthorizationCodesDataAccess(dataAccessDependencies);
+  const oauthRefreshTokens = buildOAuthRefreshTokensDataAccess(dataAccessDependencies);
 
   return {
     getSampleData: getSampleData(dataAccessDependencies),
@@ -73,5 +79,8 @@ module.exports = function buildDataAccess(dependencies) {
     tagReferences,
     userPreferences,
     resumes,
+    oauthClients,
+    oauthAuthorizationCodes,
+    oauthRefreshTokens,
   };
 };

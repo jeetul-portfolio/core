@@ -9,7 +9,7 @@ function resumesRoutes({ controller, router, middlewares }) {
   router.post(
     '/resumes',
     middlewares.authenticate,
-    middlewares.authorize(['admin']),
+    middlewares.authorize(['admin', 'service']),
     uploadResume,
     controller.resumesController.createResume
   );
@@ -17,14 +17,14 @@ function resumesRoutes({ controller, router, middlewares }) {
   router.put(
     '/resumes/:id/activate',
     middlewares.authenticate,
-    middlewares.authorize(['admin']),
+    middlewares.authorize(['admin', 'service']),
     controller.resumesController.activateResume
   );
 
   router.delete(
     '/resumes/:id',
     middlewares.authenticate,
-    middlewares.authorize(['admin']),
+    middlewares.authorize(['admin', 'service']),
     controller.resumesController.deleteResume
   );
 

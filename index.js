@@ -21,6 +21,9 @@ app.use(container.responseTimeMiddleware);
 // 3. Serve uploaded resume files from the shared PVC
 app.use('/apis/core/assets/resume', express.static('/app/assets/resume'));
 
+// 3b. OAuth authorization server (well-known + /oauth/*, served at the origin root)
+app.use(container.oauthRouter);
+
 // 4. Mount your route registry (which handles /health and /apis)
 app.use(container.registry);
 

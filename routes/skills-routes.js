@@ -5,21 +5,21 @@ function skillsRoutes({ controller, router, middlewares }) {
   router.post(
     '/skills',
     middlewares.authenticate,
-    middlewares.authorize(['admin']),
+    middlewares.authorize(['admin', 'service']),
     controller.skillsController.createSkill
   );
 
   router.put(
     '/skills/:id',
     middlewares.authenticate,
-    middlewares.authorize(['admin']),
+    middlewares.authorize(['admin', 'service']),
     controller.skillsController.updateSkill
   );
 
   router.delete(
     '/skills/:id',
     middlewares.authenticate,
-    middlewares.authorize(['admin']),
+    middlewares.authorize(['admin', 'service']),
     controller.skillsController.deleteSkill
   );
 

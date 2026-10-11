@@ -4,25 +4,25 @@ function articlesRoutes({ controller, router, middlewares }) {
   router.post(
     '/articles',
     middlewares.authenticate,
-    middlewares.authorize(['admin', 'editor']),
+    middlewares.authorize(['admin', 'editor', 'service']),
     controller.articlesController.createArticle
   );
   router.put(
     '/articles/:id',
     middlewares.authenticate,
-    middlewares.authorize(['admin', 'editor']),
+    middlewares.authorize(['admin', 'editor', 'service']),
     controller.articlesController.updateArticle
   );
   router.delete(
     '/articles/:id',
     middlewares.authenticate,
-    middlewares.authorize(['admin']),
+    middlewares.authorize(['admin', 'service']),
     controller.articlesController.deleteArticle
   );
   router.patch(
     '/articles/:id/publish',
     middlewares.authenticate,
-    middlewares.authorize(['admin', 'editor']),
+    middlewares.authorize(['admin', 'editor', 'service']),
     controller.articlesController.publishArticle
   );
 

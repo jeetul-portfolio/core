@@ -6,6 +6,7 @@ const buildDataAccess = require('./data-access');
 const buildUsecases = require('./usecases');
 const buildControllers = require('./controllers');
 const buildRoutes = require('./routes');
+const buildOAuthRoutes = require('./routes/oauth-routes');
 const middlewares = require('./middlewares')
 const routeRegistry = require('./route-registry');
 const jwt = require('jsonwebtoken');
@@ -35,6 +36,7 @@ const routes = buildRoutes({
   middlewares: authMiddlewares,
 });
 const registry = routeRegistry({ routes, express, config });
+const oauthRouter = buildOAuthRoutes({ controller, router: express.Router(), express });
 
 module.exports = {
   dataAccess,
@@ -45,4 +47,5 @@ module.exports = {
   responseTimeMiddleware: middlewares.responseTime,
   routeNotFoundMiddleware: middlewares.routeNotFound,
   registry,
+  oauthRouter,
 };

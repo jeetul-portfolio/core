@@ -11,11 +11,15 @@ const buildCategoriesController = require('./categories');
 const buildTagsController = require('./tags');
 const buildUserPreferencesController = require('./user-preferences');
 const buildResumesController = require('./resumes');
+const buildOAuthController = require('./oauth');
+const buildOAuthClientsController = require('./oauth-clients');
+const crypto = require('crypto');
 const { formatResponse, formatError } = require('./response-formatter');
 
 module.exports = function(dependencies) {
   const controllerDependencies = {
     ...dependencies,
+    crypto,
     formatResponse,
     formatError,
   };
@@ -35,5 +39,7 @@ module.exports = function(dependencies) {
     tagsController: buildTagsController(controllerDependencies),
     userPreferencesController: buildUserPreferencesController(controllerDependencies),
     resumesController: buildResumesController(controllerDependencies),
+    oauthClientsController: buildOAuthClientsController(controllerDependencies),
+    oauthController: buildOAuthController(controllerDependencies),
   };
 };
