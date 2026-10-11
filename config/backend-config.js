@@ -35,4 +35,17 @@ module.exports = {
     cookieSameSite: process.env.AUTH_COOKIE_SAME_SITE || 'lax',
     issuer: process.env.AUTH_ISSUER || 'portfolio-core',
   },
+  // OAuth 2.1 authorization server for the admin MCP server.
+  // signingPrivateKey: a secret seed (the ES256 key is derived from it) or a PEM private key.
+  // Anyone holding it can mint admin tokens for the MCP server — keep this repository private.
+  // For local runs override the URLs, e.g. OAUTH_ISSUER=http://localhost:3000.
+  oauth: {
+    issuer: process.env.OAUTH_ISSUER || 'https://apis.jeetul.com',
+    resourceUri: process.env.OAUTH_RESOURCE_URI || 'https://mcp.jeetul.com/mcp',
+    signingPrivateKey: (process.env.OAUTH_SIGNING_PRIVATE_KEY || '643233a8-953a-47cb-be97-2ae543d3c8f9').replace(/\\n/g, '\n'),
+    keyId: process.env.OAUTH_KEY_ID || 'portfolio-2026-10',
+    accessTokenTtlSec: Number(process.env.OAUTH_ACCESS_TOKEN_TTL_SEC || 600),
+    refreshTokenTtlDays: Number(process.env.OAUTH_REFRESH_TOKEN_TTL_DAYS || 30),
+    codeTtlSec: Number(process.env.OAUTH_CODE_TTL_SEC || 60),
+  },
 };
