@@ -8,7 +8,7 @@ function makeGetGitCommitsDataAccess({ logger, mysqlPool, tableName, fields }) {
     limitPerProject,
   } = {}) {
     try {
-      const sortableFields = ['committedAt', 'updatedAt', 'createdAt', 'id', 'positionRank'];
+      const sortableFields = ['committedAt', 'updatedAt', 'createdAt', 'id'];
       const normalizedSortBy = sortableFields.includes(sortBy) ? sortBy : 'committedAt';
       const normalizedSortOrder = String(sortOrder).toLowerCase() === 'asc' ? 'ASC' : 'DESC';
       const selectFields = fieldsToSelect ? fieldsToSelect.join(', ') : fields.join(', ');

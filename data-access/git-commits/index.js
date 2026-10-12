@@ -17,8 +17,6 @@ const fields = [
   'commitUrl',
   'additions',
   'deletions',
-  'positionRank',
-  'isLatest',
   'syncedAt',
   'isAccessible',
   'lastAccessCheckedAt',

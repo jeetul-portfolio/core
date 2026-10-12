@@ -183,13 +183,18 @@ async function syncRepository({ repo, normalizedMaxCommits, syncTimestamp, dataA
       syncStatus: 'partial',
     });
 
-    const commits = await githubExternalCalls.getCommits({
-      owner: repo.owner,
-      repo: repo.repo,
-      defaultBranch: repositoryData.default_branch,
-      maxCommitsPerRepo: normalizedMaxCommits,
-      // In repos we don't own, our commits may be far past the latest N — ask GitHub for ours only.
-      author: repo.isContribution ? authenticatedUser.login : undefined,
+    const commits = await fetchCommitsOrEmpty({
+      githubExternalCalls,
+      logger,
+      projectKey: repo.projectKey,
+      request: {
+        owner: repo.owner,
+        repo: repo.repo,
+        defaultBranch: repositoryData.default_branch,
+        maxCommitsPerRepo: normalizedMaxCommits,
+        // In repos we don't own, our commits may be far past the latest N — ask GitHub for ours only.
+        author: repo.isContribution ? authenticatedUser.login : undefined,
+      },
     });
 
     result.commitsFetched = commits.length;
@@ -314,6 +319,21 @@ async function syncRepository({ repo, normalizedMaxCommits, syncTimestamp, dataA
     }
 
     return result;
+  }
+}
+
+const GITHUB_EMPTY_REPOSITORY_STATUS = 409;
+
+// GitHub answers 409 "Git Repository is empty" for repos with no commits yet; that is a valid, empty sync.
+async function fetchCommitsOrEmpty({ githubExternalCalls, logger, projectKey, request }) {
+  try {
+    return await githubExternalCalls.getCommits(request);
+  } catch (error) {
+    if (error.status === GITHUB_EMPTY_REPOSITORY_STATUS) {
+      logger.info('Repository has no commits yet; nothing to sync', { projectKey });
+      return [];
+    }
+    throw error;
   }
 }
 

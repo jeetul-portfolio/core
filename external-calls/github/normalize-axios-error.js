@@ -8,7 +8,9 @@ function normalizeAxiosError(error) {
     ? error.response.data
     : JSON.stringify(error.response.data);
 
-  return new Error(`GitHub API request failed (${status}): ${payload}`);
+  const normalized = new Error(`GitHub API request failed (${status}): ${payload}`);
+  normalized.status = status;
+  return normalized;
 }
 
 module.exports = normalizeAxiosError;

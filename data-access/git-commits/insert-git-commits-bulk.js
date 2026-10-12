@@ -10,10 +10,7 @@ function makeInsertGitCommitsBulkDataAccess({ logger, mysqlPool, tableName }) {
       const now = new Date();
       const normalizedNow = toUtcMysqlDatetime(now);
       const normalizedSyncedAt = toUtcMysqlDatetime(syncedAt);
-      const values = commits.map((commit, index) => {
-        const positionRank = index + 1;
-        const isLatest = index === 0 ? 1 : 0;
-
+      const values = commits.map((commit) => {
         return [
           projectId,
           commit.fullHash,
@@ -25,8 +22,6 @@ function makeInsertGitCommitsBulkDataAccess({ logger, mysqlPool, tableName }) {
           commit.commitUrl,
           commit.additions,
           commit.deletions,
-          positionRank,
-          isLatest,
           normalizedSyncedAt,
           commit.isAccessible ? 1 : 0,
           normalizedNow,
@@ -37,13 +32,14 @@ function makeInsertGitCommitsBulkDataAccess({ logger, mysqlPool, tableName }) {
 
       const [result] = await mysqlPool.query(
         `
-          INSERT INTO ${tableName}
-          (projectId, fullHash, shortHash, message, authorName, authorAvatarUrl, committedAt, commitUrl, additions, deletions, positionRank, isLatest, syncedAt, isAccessible, lastAccessCheckedAt, createdAt, updatedAt)
+          INSERT IGNORE INTO ${tableName}
+          (projectId, fullHash, shortHash, message, authorName, authorAvatarUrl, committedAt, commitUrl, additions, deletions, syncedAt, isAccessible, lastAccessCheckedAt, createdAt, updatedAt)
           VALUES ?
         `,
         [values],
       );
 
+      // IGNORE skips hashes already stored for the project (uq_git_commits_project_fullHash).
       return result.affectedRows;
     } catch (error) {
       logger.error('Database query failed in insertGitCommitsBulkDataAccess:', error.message);

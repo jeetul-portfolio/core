@@ -56,3 +56,37 @@ test('skips forks, deactivates stored forks, and syncs open-source contributions
   assert.equal(commitCalls.find((c) => c.repo === 'lib').author, 'me');
   assert.equal(commitCalls.find((c) => c.repo === 'app').author, undefined);
 });
+
+test('an empty GitHub repository (409) syncs successfully with zero commits', async () => {
+  const statusUpdates = [];
+  const emptyRepoError = Object.assign(new Error('GitHub API request failed (409): {"message":"Git Repository is empty."}'), { status: 409 });
+  const githubExternalCalls = {
+    getAuthenticatedUser: async () => ME,
+    getAllRepositories: async () => [{ owner: { login: 'me' }, name: 'empty', fork: false }],
+    getContributedRepositories: async () => [],
+    getRepository: async () => ({ fork: false, full_name: 'me/empty', default_branch: 'main', html_url: 'u' }),
+    getCommits: async () => { throw emptyRepoError; },
+    getCommitDetails: async () => { throw new Error('should not be called'); },
+  };
+  const sync = makeSyncGitData({
+    dataAccess: {
+      gitProjects: {
+        getGitProjects: async () => [],
+        upsertGitProject: async () => 1,
+        updateGitProjectSyncStatus: async (row) => statusUpdates.push(row.syncStatus),
+      },
+      gitCommits: { upsertGitCommitsForProject: async ({ commits }) => ({ inserted: commits.length, updated: 0 }) },
+    },
+    config: { github: { token: 't', maxCommitsPerRepo: 0 } },
+    logger: { info() {}, warn() {}, error() {} },
+    Joi,
+    ValidationError: Error,
+    buildGithubExternalCalls: () => githubExternalCalls,
+  });
+
+  const result = await sync();
+
+  assert.deepEqual(result.repoResults.map((r) => [r.status, r.commitsFetched, r.error]), [['success', 0, null]]);
+  assert.equal(result.totalReposFailed, 0);
+  assert.deepEqual(statusUpdates, ['success']);
+});
