@@ -1,6 +1,8 @@
 const makeGetGitProjects = require('./get-git-projects');
 const makeUpsertGitProject = require('./upsert-git-project');
 const makeUpdateGitProjectSyncStatus = require('./update-git-project-sync-status');
+const makeDeleteGitProject = require('./delete-git-project');
+const makeGetGitProjectsWithoutCommits = require('./get-git-projects-without-commits');
 
 const TABLE_NAME = 'git_projects';
 const fields = [
@@ -37,9 +39,21 @@ module.exports = function buildGitProjectsDataAccess(dependencies) {
     tableName: TABLE_NAME,
   });
 
+  const deleteGitProject = makeDeleteGitProject({
+    ...dependencies,
+    tableName: TABLE_NAME,
+  });
+
+  const getGitProjectsWithoutCommits = makeGetGitProjectsWithoutCommits({
+    ...dependencies,
+    tableName: TABLE_NAME,
+  });
+
   return {
     getGitProjects,
+    getGitProjectsWithoutCommits,
     upsertGitProject,
     updateGitProjectSyncStatus,
+    deleteGitProject,
   };
 };

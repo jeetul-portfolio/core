@@ -7,7 +7,8 @@
     "test": "node --test tests/*.test.js",
     "start": "node index.js",
     "generate:deploy-yamls": "node deploy/create-deployment-files.js",
-    "sync:git": "node scripts/sync-git-data.js"
+    "sync:git": "node scripts/sync-git-data.js",
+    "cleanup:git": "node scripts/delete-git-projects-without-commits.js"
   },
   "keywords": [],
   "author": "",

@@ -34,8 +34,12 @@ test('skips forks, deactivates stored forks, and syncs open-source contributions
       getGitProjects: async () => [{ projectKey: 'me/old-fork', repoOwner: 'me', repoName: 'old-fork' }],
       upsertGitProject: async (row) => { upserts.push(row); return upserts.length; },
       updateGitProjectSyncStatus: async () => {},
+      deleteGitProject: async () => assert.fail('projects with commits must not be deleted'),
     },
-    gitCommits: { upsertGitCommitsForProject: async ({ commits }) => ({ inserted: commits.length, updated: 0 }) },
+    gitCommits: {
+      upsertGitCommitsForProject: async ({ commits }) => ({ inserted: commits.length, updated: 0 }),
+      getGitCommitCounts: async ({ projectIds }) => projectIds.map((projectId) => ({ projectId, totalCommitCount: 1 })),
+    },
   };
 
   const sync = makeSyncGitData({
@@ -57,8 +61,9 @@ test('skips forks, deactivates stored forks, and syncs open-source contributions
   assert.equal(commitCalls.find((c) => c.repo === 'app').author, undefined);
 });
 
-test('an empty GitHub repository (409) syncs successfully with zero commits', async () => {
+test('a repository left with zero commits after sync (e.g. empty on GitHub) is deleted', async () => {
   const statusUpdates = [];
+  const deleted = [];
   const emptyRepoError = Object.assign(new Error('GitHub API request failed (409): {"message":"Git Repository is empty."}'), { status: 409 });
   const githubExternalCalls = {
     getAuthenticatedUser: async () => ME,
@@ -71,11 +76,15 @@ test('an empty GitHub repository (409) syncs successfully with zero commits', as
   const sync = makeSyncGitData({
     dataAccess: {
       gitProjects: {
-        getGitProjects: async () => [],
-        upsertGitProject: async () => 1,
+        getGitProjects: async () => [{ projectKey: 'me/empty', repoOwner: 'me', repoName: 'empty' }],
+        upsertGitProject: async () => 7,
         updateGitProjectSyncStatus: async (row) => statusUpdates.push(row.syncStatus),
+        deleteGitProject: async ({ projectId }) => { deleted.push(projectId); return true; },
       },
-      gitCommits: { upsertGitCommitsForProject: async ({ commits }) => ({ inserted: commits.length, updated: 0 }) },
+      gitCommits: {
+        upsertGitCommitsForProject: async ({ commits }) => ({ inserted: commits.length, updated: 0 }),
+        getGitCommitCounts: async () => [],
+      },
     },
     config: { github: { token: 't', maxCommitsPerRepo: 0 } },
     logger: { info() {}, warn() {}, error() {} },
@@ -86,7 +95,9 @@ test('an empty GitHub repository (409) syncs successfully with zero commits', as
 
   const result = await sync();
 
-  assert.deepEqual(result.repoResults.map((r) => [r.status, r.commitsFetched, r.error]), [['success', 0, null]]);
+  assert.deepEqual(result.repoResults.map((r) => [r.status, r.commitsFetched, r.error]), [['removed', 0, null]]);
+  assert.deepEqual(deleted, [7]);
   assert.equal(result.totalReposFailed, 0);
-  assert.deepEqual(statusUpdates, ['success']);
+  assert.equal(result.totalReposRemoved, 1);
+  assert.deepEqual(statusUpdates, [], 'a removed project is not marked synced');
 });

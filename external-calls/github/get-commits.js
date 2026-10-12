@@ -1,5 +1,7 @@
 const normalizeAxiosError = require('./normalize-axios-error');
 
+const EMPTY_REPOSITORY_STATUS = 409;
+
 function makeGetCommits({ githubClient, logger }) {
   return async function getCommits({ owner, repo, defaultBranch, maxCommitsPerRepo, author }) {
     const commits = [];
@@ -83,13 +85,17 @@ function makeGetCommits({ githubClient, logger }) {
 
         page += 1;
       } catch (error) {
-        logger?.error('GitHub commit pagination failed', {
-          owner,
-          repo,
-          page,
-          error: error.message,
-        });
-        throw normalizeAxiosError(error);
+        const normalized = normalizeAxiosError(error);
+        // 409 = repository has no commits yet; the caller treats that as an empty sync, not a failure.
+        if (normalized.status !== EMPTY_REPOSITORY_STATUS) {
+          logger?.error('GitHub commit pagination failed', {
+            owner,
+            repo,
+            page,
+            error: error.message,
+          });
+        }
+        throw normalized;
       }
     }
 

@@ -49,6 +49,7 @@ function makeSyncGitDataUsecase({ dataAccess, config, logger, Joi, ValidationErr
         totalReposRequested: 0,
         totalReposSynced: 0,
         totalReposFailed: 0,
+        totalReposRemoved: 0,
         totalCommitsUpserted: 0,
         repoResults: [],
       };
@@ -96,11 +97,13 @@ function makeSyncGitDataUsecase({ dataAccess, config, logger, Joi, ValidationErr
 
     const totalReposSynced = repoResults.filter((result) => result.status === 'success').length;
     const totalReposFailed = repoResults.filter((result) => result.status === 'failed').length;
+    const totalReposRemoved = repoResults.filter((result) => result.status === 'removed').length;
 
     logger.info('Git sync completed', {
       totalReposRequested: repoResults.length,
       totalReposSynced,
       totalReposFailed,
+      totalReposRemoved,
       totalCommitsUpserted,
     });
 
@@ -109,6 +112,7 @@ function makeSyncGitDataUsecase({ dataAccess, config, logger, Joi, ValidationErr
       totalReposRequested: repoResults.length,
       totalReposSynced,
       totalReposFailed,
+      totalReposRemoved,
       totalCommitsUpserted,
       repoResults,
     };
@@ -281,6 +285,14 @@ async function syncRepository({ repo, normalizedMaxCommits, syncTimestamp, dataA
       updated: upsertResult.updated,
     });
 
+    // A repo with none of our commits stored (empty on GitHub, or nothing authored by us) isn't shown; remove it.
+    if (await hasNoStoredCommits({ dataAccess, projectId })) {
+      await dataAccess.gitProjects.deleteGitProject({ projectId });
+      logger.info('Removed git project with no commits', { projectKey: repo.projectKey, projectId });
+      result.status = 'removed';
+      return result;
+    }
+
     await dataAccess.gitProjects.updateGitProjectSyncStatus({
       projectId,
       syncStatus: 'success',
@@ -320,6 +332,11 @@ async function syncRepository({ repo, normalizedMaxCommits, syncTimestamp, dataA
 
     return result;
   }
+}
+
+async function hasNoStoredCommits({ dataAccess, projectId }) {
+  const [counts] = await dataAccess.gitCommits.getGitCommitCounts({ projectIds: [projectId] });
+  return !counts || Number(counts.totalCommitCount) === 0;
 }
 
 const GITHUB_EMPTY_REPOSITORY_STATUS = 409;
