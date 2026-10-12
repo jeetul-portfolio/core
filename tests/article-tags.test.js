@@ -194,6 +194,29 @@ test('##refs in content are associated on create and update alike', async () => 
   assert.deepEqual(db.slugsFor(a.id), ['argo', 'k8s']);
 });
 
+test('publish syncs tag associations, unpublish removes them, republish restores them', async () => {
+  const db = makeDb({ seedTags: SEEDED });
+  const uc = build(db);
+  const a = await uc.createArticle({ title: 't', content: 'c', authorName: 'Jeetul Samaiya', tags: ARTICLE_13_TAGS });
+  const expected = db.slugsFor(a.id);
+
+  await db.dataAccess.tagReferences.deleteByEntity({ entityType: 'article', entityId: a.id }); // simulate drift
+  let res = await uc.publishArticle({ id: a.id, action: 'publish' });
+  assert.deepEqual(db.slugsFor(a.id), expected);
+  assert.equal(res.status, 'published');
+
+  res = await uc.publishArticle({ id: a.id, action: 'unpublish' });
+  assert.deepEqual(db.slugsFor(a.id), []);
+  assert.equal(db.usage('kubernetes'), 0);
+  assert.equal(res.status, 'draft');
+  assert.deepEqual(res.tags, ARTICLE_13_TAGS); // canonical list kept for republish
+  assert.equal(res.authorName, 'Jeetul Samaiya');
+
+  await uc.publishArticle({ id: a.id, action: 'publish' });
+  assert.deepEqual(db.slugsFor(a.id), expected);
+  assert.equal(db.tags.size, 6);
+});
+
 test('association failure on create leaves no article and no references', async () => {
   const db = makeDb();
   db.fail.upsert = true;

@@ -47,6 +47,7 @@ module.exports = function buildArticlesUsecase(dependencies) {
       ...dependencies,
       NotFoundError,
       presentArticleDetail,
+      parseTagsFromStorage,
     }),
   };
 };
