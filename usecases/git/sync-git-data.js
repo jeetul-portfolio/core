@@ -35,6 +35,7 @@ function makeSyncGitDataUsecase({ dataAccess, config, logger, Joi, ValidationErr
       config,
       logger,
       githubExternalCalls,
+      authenticatedUser,
     });
 
     logger.info('Resolved repositories for git sync', {
@@ -94,7 +95,7 @@ function makeSyncGitDataUsecase({ dataAccess, config, logger, Joi, ValidationErr
     }
 
     const totalReposSynced = repoResults.filter((result) => result.status === 'success').length;
-    const totalReposFailed = repoResults.length - totalReposSynced;
+    const totalReposFailed = repoResults.filter((result) => result.status === 'failed').length;
 
     logger.info('Git sync completed', {
       totalReposRequested: repoResults.length,
@@ -146,6 +147,24 @@ async function syncRepository({ repo, normalizedMaxCommits, syncTimestamp, dataA
       htmlUrl: repositoryData.html_url,
     });
 
+    // Forks aren't shown; deactivate so a previously synced fork drops out of the overview.
+    if (repositoryData.fork) {
+      await dataAccess.gitProjects.upsertGitProject({
+        projectKey: repo.projectKey,
+        displayName: repo.displayName || repositoryData.full_name,
+        repoOwner: repo.owner,
+        repoName: repo.repo,
+        repoUrl: repositoryData.html_url,
+        defaultBranch: repositoryData.default_branch,
+        isActive: false,
+        syncStatus: 'success',
+        isStale: false,
+      });
+      logger.info('Skipping forked repository', { projectKey: repo.projectKey });
+      result.status = 'skipped';
+      return result;
+    }
+
     projectId = await dataAccess.gitProjects.upsertGitProject({
       projectKey: repo.projectKey,
       displayName: repo.displayName || repositoryData.full_name,
@@ -169,6 +188,8 @@ async function syncRepository({ repo, normalizedMaxCommits, syncTimestamp, dataA
       repo: repo.repo,
       defaultBranch: repositoryData.default_branch,
       maxCommitsPerRepo: normalizedMaxCommits,
+      // In repos we don't own, our commits may be far past the latest N — ask GitHub for ours only.
+      author: repo.isContribution ? authenticatedUser.login : undefined,
     });
 
     result.commitsFetched = commits.length;
@@ -296,7 +317,7 @@ async function syncRepository({ repo, normalizedMaxCommits, syncTimestamp, dataA
   }
 }
 
-async function resolveReposToSync({ validatedRepos, dataAccess, config, logger, githubExternalCalls }) {
+async function resolveReposToSync({ validatedRepos, dataAccess, config, logger, githubExternalCalls, authenticatedUser }) {
   if (Array.isArray(validatedRepos) && validatedRepos.length > 0) {
     logger.info('Using explicitly requested repositories for git sync', {
       totalValidatedRepos: validatedRepos.length,
@@ -341,15 +362,29 @@ async function resolveReposToSync({ validatedRepos, dataAccess, config, logger, 
     });
     mergedRepos.push(
       ...discoveredRepos
+        .filter((repository) => !repository.fork)
         .map((repository) => normalizeDiscoveredRepository(repository))
         .filter(Boolean),
     );
   }
 
+  const contributedRepos = await githubExternalCalls.getContributedRepositories({ login: authenticatedUser.login });
+  if (contributedRepos.length > 0) {
+    logger.info('Using open-source contributions for git sync', {
+      totalContributedRepos: contributedRepos.length,
+    });
+    mergedRepos.push(...contributedRepos.map((repo) => ({ ...repo, isContribution: true })));
+  }
+
   const dedupedByProjectKey = new Map();
   mergedRepos.forEach((repo) => {
     const normalized = normalizeRepoInput(repo);
-    dedupedByProjectKey.set(normalized.projectKey, normalized);
+    const previous = dedupedByProjectKey.get(normalized.projectKey);
+    dedupedByProjectKey.set(normalized.projectKey, {
+      ...normalized,
+      displayName: normalized.displayName || previous?.displayName,
+      isContribution: Boolean(repo.isContribution || previous?.isContribution),
+    });
   });
 
   logger.info('Repository deduplication completed for git sync', {

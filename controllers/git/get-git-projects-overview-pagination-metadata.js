@@ -41,7 +41,7 @@ function validateInputs({ Joi, ValidationError, page, pageSize, onlyActive, proj
   const schema = Joi.object({
     page: Joi.number().integer().min(1).default(1),
     pageSize: Joi.number().integer().min(1).max(100).default(10),
-    onlyActive: Joi.boolean().truthy('1', 'true', 'yes').falsy('0', 'false', 'no').default(false),
+    onlyActive: Joi.boolean().truthy('1', 'true', 'yes').falsy('0', 'false', 'no').default(true),
     projectKeys: Joi.array().items(Joi.string().trim().min(1).max(80)).default([]),
   });
 

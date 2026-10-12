@@ -5,6 +5,7 @@ const makeGetCommits = require('./get-commits');
 const makeGetCommitDetails = require('./get-commit-details');
 const makeGetAuthenticatedUser = require('./get-authenticated-user');
 const makeGetAllRepositories = require('./get-all-repositories');
+const makeGetContributedRepositories = require('./get-contributed-repositories');
 
 module.exports = function buildGithubExternalCalls({ config, logger }) {
   const githubClient = createGithubClient({ axios, config });
@@ -15,5 +16,6 @@ module.exports = function buildGithubExternalCalls({ config, logger }) {
     getCommitDetails: makeGetCommitDetails({ githubClient }),
     getAuthenticatedUser: makeGetAuthenticatedUser({ githubClient }),
     getAllRepositories: makeGetAllRepositories({ githubClient }),
+    getContributedRepositories: makeGetContributedRepositories({ githubClient }),
   };
 };

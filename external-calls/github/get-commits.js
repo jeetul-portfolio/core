@@ -1,7 +1,7 @@
 const normalizeAxiosError = require('./normalize-axios-error');
 
 function makeGetCommits({ githubClient, logger }) {
-  return async function getCommits({ owner, repo, defaultBranch, maxCommitsPerRepo }) {
+  return async function getCommits({ owner, repo, defaultBranch, maxCommitsPerRepo, author }) {
     const commits = [];
     let page = 1;
     const hasLimit = Number.isFinite(maxCommitsPerRepo) && Number(maxCommitsPerRepo) > 0;
@@ -44,6 +44,7 @@ function makeGetCommits({ githubClient, logger }) {
             sha: defaultBranch,
             per_page: effectivePerPage,
             page,
+            ...(author ? { author } : {}),
           },
         });
 

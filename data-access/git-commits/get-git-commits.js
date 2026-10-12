@@ -5,6 +5,7 @@ function makeGetGitCommitsDataAccess({ logger, mysqlPool, tableName, fields }) {
     fieldsToSelect,
     sortBy = 'committedAt',
     sortOrder = 'desc',
+    limitPerProject,
   } = {}) {
     try {
       const sortableFields = ['committedAt', 'updatedAt', 'createdAt', 'id', 'positionRank'];
@@ -24,7 +25,21 @@ function makeGetGitCommitsDataAccess({ logger, mysqlPool, tableName, fields }) {
       }
 
       const whereClause = whereClauses.length > 0 ? ` WHERE ${whereClauses.join(' AND ')}` : '';
-      const query = `SELECT ${selectFields} FROM ${tableName}${whereClause} ORDER BY ${normalizedSortBy} ${normalizedSortOrder}`;
+      const orderBy = `ORDER BY ${normalizedSortBy} ${normalizedSortOrder}`;
+      let query = `SELECT ${selectFields} FROM ${tableName}${whereClause} ${orderBy}`;
+
+      // Top-N per project (MySQL 8+ window function) so growing history isn't loaded in full.
+      if (Number.isInteger(limitPerProject) && limitPerProject > 0) {
+        query = `
+          SELECT ${selectFields} FROM (
+            SELECT ${selectFields}, ROW_NUMBER() OVER (PARTITION BY projectId ${orderBy}) AS rowNum
+            FROM ${tableName}${whereClause}
+          ) ranked
+          WHERE rowNum <= ?
+          ${orderBy}
+        `;
+        params.push(limitPerProject);
+      }
 
       const [rows] = await mysqlPool.query(query, params);
       return rows;

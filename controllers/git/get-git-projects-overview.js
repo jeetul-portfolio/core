@@ -48,7 +48,7 @@ function validateInputs({ Joi, ValidationError, limit, page, pageSize, sortBy, s
     pageSize: Joi.number().integer().min(1).max(100).default(10),
     sortBy: Joi.string().trim().valid('committedAt', 'updatedAt', 'createdAt', 'lastSyncedAt', 'displayName', 'projectKey').default('committedAt'),
     sortOrder: Joi.string().trim().lowercase().valid('asc', 'desc').default('desc'),
-    onlyActive: Joi.boolean().truthy('1', 'true', 'yes').falsy('0', 'false', 'no').default(false),
+    onlyActive: Joi.boolean().truthy('1', 'true', 'yes').falsy('0', 'false', 'no').default(true),
     projectKeys: Joi.array().items(Joi.string().trim().min(1).max(80)).default([]),
   });
 

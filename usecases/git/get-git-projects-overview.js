@@ -22,7 +22,7 @@ function makeGetGitProjectsOverviewUsecase({ dataAccess, logger, Joi, Validation
     pageSize = 10,
     sortBy = 'committedAt',
     sortOrder = 'desc',
-    onlyActive = false,
+    onlyActive = true,
     projectKeys = [],
   } = {}) {
     const validatedInputs = validateInputs({
@@ -61,6 +61,7 @@ function makeGetGitProjectsOverviewUsecase({ dataAccess, logger, Joi, Validation
         fieldsToSelect: RECENT_COMMIT_FIELDS,
         sortBy: 'committedAt',
         sortOrder: 'desc',
+        limitPerProject: normalizedLimit,
       }),
     ]);
 
@@ -135,7 +136,7 @@ function makeGetGitProjectsOverviewUsecase({ dataAccess, logger, Joi, Validation
     pageSize: Joi.number().integer().min(1).max(100).default(10),
     sortBy: Joi.string().trim().valid('committedAt', 'updatedAt', 'createdAt', 'lastSyncedAt', 'displayName', 'projectKey').default('committedAt'),
     sortOrder: Joi.string().trim().lowercase().valid('asc', 'desc').default('desc'),
-    onlyActive: Joi.boolean().truthy('1', 'true', 'yes').falsy('0', 'false', 'no').default(false),
+    onlyActive: Joi.boolean().truthy('1', 'true', 'yes').falsy('0', 'false', 'no').default(true),
     projectKeys: Joi.array().items(Joi.string().trim().min(1).max(80)).default([]),
   });
 
