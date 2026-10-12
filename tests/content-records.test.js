@@ -235,3 +235,37 @@ test('invalid id-or-slug path params are rejected', async (t) => {
   assert.equal((await app.call('GET', '/projects/Not_A_Slug')).status, 400);
   assert.equal((await app.call('GET', '/projects/-bad-')).status, 400);
 });
+
+test('project links: many per type, validated, replaced as a whole list', async (t) => {
+  const app = await startApp();
+  t.after(app.close);
+  const post = (links) => app.call('POST', '/projects', { body: { title: `P ${Math.random()}`, links }, as: 'admin' });
+
+  const links = [
+    { type: 'repository', label: 'Backend (Go)', url: 'https://github.com/acme/api' },
+    { type: 'repository', label: 'Frontend (React)', url: 'https://github.com/acme/web' },
+    { type: 'demo', label: 'Production', url: 'https://app.example.com' },
+    { type: 'demo', label: 'Staging', url: 'https://staging.example.com' },
+    { label: 'Talk', url: 'https://youtube.com/watch?v=1' },
+  ];
+  const created = await post(links);
+  assert.equal(created.status, 201);
+  assert.equal(created.data.links.length, 5);
+  assert.equal(created.data.links.filter((l) => l.type === 'repository').length, 2);
+  assert.equal(created.data.links[4].type, 'other', 'type defaults to other');
+
+  assert.equal((await post([{ type: 'blog', label: 'x', url: 'https://x.y' }])).status, 400, 'unknown type');
+  assert.equal((await post([{ type: 'demo', url: 'https://x.y' }])).status, 400, 'label required');
+  assert.equal((await post([{ type: 'demo', label: 'x', url: 'javascript:alert(1)' }])).status, 400, 'http(s) only');
+  assert.equal((await post([{ type: 'demo', label: 'x', url: '' }])).status, 400, 'url required');
+  assert.equal((await post(Array.from({ length: 21 }, (_, i) => ({ label: `l${i}`, url: `https://x.y/${i}` })))).status, 400, 'max 20');
+
+  const replaced = await app.call('PUT', `/projects/${created.data.id}`, {
+    body: { links: [{ type: 'documentation', label: 'Docs', url: 'https://docs.example.com' }] },
+    as: 'admin',
+  });
+  assert.deepEqual(replaced.data.links, [{ type: 'documentation', label: 'Docs', url: 'https://docs.example.com' }]);
+
+  const cleared = await app.call('PUT', `/projects/${created.data.id}`, { body: { links: [] }, as: 'admin' });
+  assert.deepEqual(cleared.data.links, []);
+});
