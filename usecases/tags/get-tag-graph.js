@@ -44,15 +44,17 @@ function makeGetTagGraphUsecase({ dataAccess }) {
       const entityNodeId = `${ref.entityType}-${ref.entityId}`;
 
       // Only add entity node if we have a label for it (entity still exists)
-      const label = entityLabelMap[ref.entityType]?.[ref.entityId];
-      if (!label) continue;
+      const entity = entityLabelMap[ref.entityType]?.[ref.entityId];
+      if (!entity?.label) continue;
 
       if (!nodeSet.has(entityNodeId)) {
         nodeSet.set(entityNodeId, {
           id: entityNodeId,
-          label,
+          label: entity.label,
           type: ref.entityType,
           entityId: ref.entityId,
+          // Lets the site route slug-addressed entities (e.g. /projects/<slug>).
+          ...(entity.slug ? { slug: entity.slug } : {}),
           color: ENTITY_COLORS[ref.entityType] || '#6b7280',
         });
       }
@@ -80,22 +82,22 @@ async function resolveEntityLabels(entityMap, dataAccess) {
       if (entityType === 'article') {
         const rows = await fetchArticleLabels(dataAccess, uniqueIds);
         for (const row of rows) {
-          result[entityType][row.id] = row.label;
+          result[entityType][row.id] = { label: row.label, slug: row.slug };
         }
       } else if (entityType === 'skill') {
         const rows = await fetchSkillLabels(dataAccess, uniqueIds);
         for (const row of rows) {
-          result[entityType][row.id] = row.label;
+          result[entityType][row.id] = { label: row.label, slug: row.slug };
         }
       } else if (entityType === 'profile') {
         const rows = await fetchProfileLabels(dataAccess, uniqueIds);
         for (const row of rows) {
-          result[entityType][row.id] = row.label;
+          result[entityType][row.id] = { label: row.label, slug: row.slug };
         }
       } else if (entityType === 'experience' || entityType === 'project') {
         const rows = await fetchContentRecordLabels(dataAccess, entityType, uniqueIds);
         for (const row of rows) {
-          result[entityType][row.id] = row.label;
+          result[entityType][row.id] = { label: row.label, slug: row.slug };
         }
       }
       // Future entity types can be added here in the same pattern
@@ -143,6 +145,7 @@ async function fetchContentRecordLabels(dataAccess, entityType, ids) {
     return rows.map((r) => ({
       id: r.id,
       label: entityType === 'experience' ? `${r.role} @ ${r.company}` : r.title,
+      slug: r.slug,
     }));
   } catch {
     return [];
