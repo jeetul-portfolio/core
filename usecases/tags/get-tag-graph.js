@@ -92,6 +92,11 @@ async function resolveEntityLabels(entityMap, dataAccess) {
         for (const row of rows) {
           result[entityType][row.id] = row.label;
         }
+      } else if (entityType === 'experience' || entityType === 'project') {
+        const rows = await fetchContentRecordLabels(dataAccess, entityType, uniqueIds);
+        for (const row of rows) {
+          result[entityType][row.id] = row.label;
+        }
       }
       // Future entity types can be added here in the same pattern
     })
@@ -130,6 +135,20 @@ async function fetchProfileLabels(dataAccess, ids) {
   }
 }
 
+async function fetchContentRecordLabels(dataAccess, entityType, ids) {
+  if (!ids.length) return [];
+  try {
+    const store = entityType === 'experience' ? dataAccess.experiences : dataAccess.projects;
+    const rows = await store.getByIds({ ids });
+    return rows.map((r) => ({
+      id: r.id,
+      label: entityType === 'experience' ? `${r.role} @ ${r.company}` : r.title,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 function groupByType(references) {
   return references.reduce((acc, ref) => {
     if (!acc[ref.entityType]) acc[ref.entityType] = [];
@@ -154,6 +173,7 @@ const ENTITY_COLORS = {
   skill: '#22c55e',
   profile: '#f97316',
   experience: '#a855f7',
+  project: '#eab308',
   email_template: '#ec4899',
 };
 

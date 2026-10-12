@@ -12,6 +12,7 @@ const tagsRoutes = require('./tags-routes');
 const userPreferencesRoutes = require('./user-preferences-routes');
 const resumesRoutes = require('./resumes-routes');
 const oauthClientsRoutes = require('./oauth-clients-routes');
+const contentRecordsRoutes = require('./content-records-routes');
 
 function buildRoutes({ controller, express, middlewares }) {
   const sample = sampleRoutes({ controller, router: express.Router(), middlewares });
@@ -27,6 +28,18 @@ function buildRoutes({ controller, express, middlewares }) {
   const userPreferences = userPreferencesRoutes({ controller, router: express.Router(), middlewares });
   const resumes = resumesRoutes({ controller, router: express.Router(), middlewares });
   const oauthClients = oauthClientsRoutes({ controller, router: express.Router(), middlewares });
+  const experiences = contentRecordsRoutes({
+    router: express.Router(),
+    middlewares,
+    controller: controller.experiencesController,
+    resource: 'experiences',
+  });
+  const projects = contentRecordsRoutes({
+    router: express.Router(),
+    middlewares,
+    controller: controller.projectsController,
+    resource: 'projects',
+  });
 
   return {
     sample,
@@ -42,6 +55,8 @@ function buildRoutes({ controller, express, middlewares }) {
     userPreferences,
     resumes,
     oauthClients,
+    experiences,
+    projects,
   };
 }
 
