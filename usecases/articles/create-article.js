@@ -1,9 +1,12 @@
+const { syncArticleTags } = require('./sync-article-tags');
+
 function makeCreateArticleUsecase({
   dataAccess,
   getArticleById,
   presentArticleDetail,
   buildExcerpt,
   normalizeTagsForStorage,
+  parseTagsFromStorage,
   syncEntityTags,
 }) {
   return async function createArticleUsecase(input) {
@@ -11,15 +14,16 @@ function makeCreateArticleUsecase({
     const created = await dataAccess.articles.createArticle(payload);
 
     if (syncEntityTags) {
-      const explicitTags = Array.isArray(input.tags)
-        ? input.tags
-        : typeof input.tags === 'string' ? input.tags.split(',').map((t) => t.trim()).filter(Boolean) : [];
-      await syncEntityTags({
-        entityType: 'article',
-        entityId: created.id,
-        explicitTags,
-        textFields: [input.content],
-      });
+      const row = await dataAccess.articles.getArticleById({ id: created.id, includeDrafts: true });
+      try {
+        await syncArticleTags({ syncEntityTags, parseTagsFromStorage, article: row });
+      } catch (error) {
+        // ponytail: compensating delete instead of a cross-table DB transaction; switch to a
+        // shared connection if article creation grows more steps. Tags created by find-or-create stay (usage 0).
+        await dataAccess.articles.deleteArticle({ id: created.id });
+        await dataAccess.tagReferences.deleteByEntity({ entityType: 'article', entityId: created.id });
+        throw error;
+      }
     }
 
     const article = await getArticleById({ id: created.id, includeDrafts: true });

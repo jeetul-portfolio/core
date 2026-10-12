@@ -32,6 +32,7 @@ module.exports = function buildArticlesUsecase(dependencies) {
       presentArticleDetail,
       buildExcerpt,
       normalizeTagsForStorage,
+      parseTagsFromStorage,
     }),
     updateArticle: makeUpdateArticleUsecase({
       ...dependencies,
@@ -39,6 +40,7 @@ module.exports = function buildArticlesUsecase(dependencies) {
       presentArticleDetail,
       buildExcerpt,
       normalizeTagsForStorage,
+      parseTagsFromStorage,
     }),
     deleteArticle: makeDeleteArticleUsecase(dependencies),
     publishArticle: makePublishArticleUsecase({

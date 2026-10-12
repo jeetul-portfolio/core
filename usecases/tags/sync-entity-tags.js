@@ -1,4 +1,5 @@
 const { extractHashtags } = require('../../utils/extract-hashtags');
+const { slugifyTag: slugify } = require('../../utils/tags-storage');
 
 /**
  * Syncs tags for a given entity.
@@ -48,14 +49,6 @@ function makeSyncEntityTagsUsecase({ dataAccess }) {
     const validTagIds = tagIds.filter(Boolean);
     await dataAccess.tagReferences.upsertReferences({ entityType, entityId, tagIds: validTagIds });
   };
-}
-
-function slugify(value) {
-  return String(value || '')
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9_-]+/g, '-')
-    .replace(/^-+|-+$/g, '');
 }
 
 module.exports = makeSyncEntityTagsUsecase;

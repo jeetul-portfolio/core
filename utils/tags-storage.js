@@ -39,18 +39,29 @@ function normalizeTagsInput(input) {
     ? input
     : String(input || '').split(',');
 
-  const deduped = new Set();
+  // Dedupe by slug so "NATS JetStream" and " nats  jetstream" collapse to one tag (first wins).
+  const deduped = new Map();
   values.forEach((value) => {
-    const normalized = String(value || '').trim();
-    if (normalized) {
-      deduped.add(normalized);
+    const normalized = String(value || '').trim().replace(/\s+/g, ' ');
+    const slug = slugifyTag(normalized);
+    if (slug && !deduped.has(slug)) {
+      deduped.set(slug, normalized);
     }
   });
 
-  return Array.from(deduped);
+  return Array.from(deduped.values());
+}
+
+function slugifyTag(value) {
+  return String(value || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 
 module.exports = {
   normalizeTagsForStorage,
   parseTagsFromStorage,
+  slugifyTag,
 };

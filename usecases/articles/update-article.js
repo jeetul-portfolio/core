@@ -1,9 +1,12 @@
+const { syncArticleTags } = require('./sync-article-tags');
+
 function makeUpdateArticleUsecase({
   dataAccess,
   NotFoundError,
   presentArticleDetail,
   buildExcerpt,
   normalizeTagsForStorage,
+  parseTagsFromStorage,
   syncEntityTags,
 }) {
   return async function updateArticleUsecase(input) {
@@ -29,26 +32,7 @@ function makeUpdateArticleUsecase({
     }
 
     if (syncEntityTags) {
-      const explicitTags = Object.prototype.hasOwnProperty.call(input, 'tags')
-        ? Array.isArray(input.tags)
-          ? input.tags
-          : typeof input.tags === 'string' ? input.tags.split(',').map((t) => t.trim()).filter(Boolean) : []
-        : undefined;
-
-      if (explicitTags !== undefined || Object.prototype.hasOwnProperty.call(input, 'content')) {
-        const contentToScan = Object.prototype.hasOwnProperty.call(input, 'content')
-          ? input.content
-          : article.content;
-
-        const doubleHashTags = extractTagRefs(contentToScan);
-
-        await syncEntityTags({
-          entityType: 'article',
-          entityId: input.id,
-          explicitTags: [...(explicitTags || []), ...doubleHashTags],
-          textFields: [],
-        });
-      }
+      await syncArticleTags({ syncEntityTags, parseTagsFromStorage, article });
     }
 
     return presentArticleDetail(article);
@@ -101,17 +85,6 @@ function buildPayload(input, buildExcerpt, normalizeTagsForStorage, currentStatu
   }
 
   return payload;
-}
-
-function extractTagRefs(content) {
-  if (!content || typeof content !== 'string') return [];
-  const pattern = /##([a-zA-Z][\w-]*)/g;
-  const found = new Set();
-  let match;
-  while ((match = pattern.exec(content)) !== null) {
-    found.add(match[1].toLowerCase());
-  }
-  return Array.from(found);
 }
 
 function normalizeNullable(value) {

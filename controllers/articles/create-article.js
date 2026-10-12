@@ -28,7 +28,7 @@ function validateInputs({ Joi, ValidationError, body }) {
     excerpt: Joi.string().trim().allow('').max(2000).optional(),
     content: Joi.string().trim().min(1).required(),
     coverImage: Joi.string().uri().allow(null, '').optional(),
-    authorName: Joi.string().trim().max(120).allow('').optional(),
+    authorName: Joi.string().trim().min(1).max(120).required(),
     authorAvatar: Joi.string().uri().allow(null, '').optional(),
     status: Joi.string().valid('draft', 'published').default('draft'),
     publishedAt: Joi.date().iso().allow(null).optional(),
