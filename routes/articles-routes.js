@@ -1,5 +1,6 @@
 function articlesRoutes({ controller, router, middlewares }) {
   router.get('/articles', controller.articlesController.getArticles);
+  router.get('/articles/slug/:slug', controller.articlesController.getArticleBySlug);
   router.get('/articles/:id', controller.articlesController.getArticleById);
   router.post(
     '/articles',

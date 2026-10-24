@@ -1,6 +1,7 @@
 const makeGetArticles = require('./get-articles');
 const makeGetArticleById = require('./get-article-by-id');
 const makeGetArticlesByIds = require('./get-articles-by-ids');
+const makeGetArticleTitles = require('./get-article-titles');
 const makeCreateArticle = require('./create-article');
 const makeUpdateArticle = require('./update-article');
 const makeDeleteArticle = require('./delete-article');
@@ -38,10 +39,16 @@ module.exports = function buildArticlesDataAccess(dependencies) {
     tableName: TABLE_NAME,
   });
 
+  const getArticleTitles = makeGetArticleTitles({
+    ...dependencies,
+    tableName: TABLE_NAME,
+  });
+
   return {
     getArticles,
     getArticleById,
     getArticlesByIds,
+    getArticleTitles,
     createArticle,
     updateArticle,
     deleteArticle,

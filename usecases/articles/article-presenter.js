@@ -85,4 +85,5 @@ function normalizeStatus(status) {
 
 module.exports = {
   buildArticlePresenter,
+  buildSlug,
 };

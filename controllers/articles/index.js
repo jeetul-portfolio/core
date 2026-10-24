@@ -1,5 +1,6 @@
 const makeGetArticlesController = require('./get-articles');
 const makeGetArticleByIdController = require('./get-article-by-id');
+const makeGetArticleBySlugController = require('./get-article-by-slug');
 const makeCreateArticleController = require('./create-article');
 const makeUpdateArticleController = require('./update-article');
 const makeDeleteArticleController = require('./delete-article');
@@ -17,6 +18,7 @@ module.exports = function buildArticlesController(dependencies) {
   return {
     getArticles: makeGetArticlesController(controllerDependencies),
     getArticleById: makeGetArticleByIdController(controllerDependencies),
+    getArticleBySlug: makeGetArticleBySlugController(controllerDependencies),
     createArticle: makeCreateArticleController(controllerDependencies),
     updateArticle: makeUpdateArticleController(controllerDependencies),
     deleteArticle: makeDeleteArticleController(controllerDependencies),

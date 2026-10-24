@@ -1,11 +1,12 @@
 const makeGetArticlesUsecase = require('./get-articles');
 const makeGetArticleByIdUsecase = require('./get-article-by-id');
+const makeGetArticleBySlugUsecase = require('./get-article-by-slug');
 const makeCreateArticleUsecase = require('./create-article');
 const makeUpdateArticleUsecase = require('./update-article');
 const makeDeleteArticleUsecase = require('./delete-article');
 const makePublishArticleUsecase = require('./publish-article');
 const { NotFoundError } = require('../../exceptions');
-const { buildArticlePresenter } = require('./article-presenter');
+const { buildArticlePresenter, buildSlug } = require('./article-presenter');
 const { buildExcerpt } = require('./build-excerpt');
 const { normalizeTagsForStorage, parseTagsFromStorage } = require('../../utils/tags-storage');
 
@@ -26,6 +27,12 @@ module.exports = function buildArticlesUsecase(dependencies) {
       presentArticleListItem,
     }),
     getArticleById,
+    getArticleBySlug: makeGetArticleBySlugUsecase({
+      ...dependencies,
+      buildSlug,
+      getArticleById,
+      NotFoundError,
+    }),
     createArticle: makeCreateArticleUsecase({
       ...dependencies,
       getArticleById,
