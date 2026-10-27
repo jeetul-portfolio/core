@@ -35,6 +35,10 @@ function makeDb({ seedTags = [] } = {}) {
       },
       deleteArticle: async ({ id }) => articles.delete(id),
     },
+    articleCategories: {
+      getForArticleIds: async () => [],
+      replaceForArticle: async () => {},
+    },
     tags: {
       findOrCreateTag: async ({ name, slug }) => {
         const existing = [...tags.values()].find((t) => t.slug === slug);

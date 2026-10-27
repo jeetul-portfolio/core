@@ -8,15 +8,23 @@ function makeCreateArticleUsecase({
   normalizeTagsForStorage,
   parseTagsFromStorage,
   syncEntityTags,
+  assertCategoriesExist,
 }) {
-  return async function createArticleUsecase(input) {
+  return async function createArticleUsecase({ categoryIds, ...input }) {
+    if (categoryIds) await assertCategoriesExist(categoryIds);
+
     const payload = buildPayload(input, buildExcerpt, normalizeTagsForStorage);
     const created = await dataAccess.articles.createArticle(payload);
 
-    if (syncEntityTags) {
-      const row = await dataAccess.articles.getArticleById({ id: created.id, includeDrafts: true });
+    if (syncEntityTags || categoryIds) {
       try {
-        await syncArticleTags({ syncEntityTags, parseTagsFromStorage, article: row });
+        if (categoryIds) {
+          await dataAccess.articleCategories.replaceForArticle({ articleId: created.id, categoryIds });
+        }
+        if (syncEntityTags) {
+          const row = await dataAccess.articles.getArticleById({ id: created.id, includeDrafts: true });
+          await syncArticleTags({ syncEntityTags, parseTagsFromStorage, article: row });
+        }
       } catch (error) {
         // ponytail: compensating delete instead of a cross-table DB transaction; switch to a
         // shared connection if article creation grows more steps. Tags created by find-or-create stay (usage 0).
@@ -26,9 +34,7 @@ function makeCreateArticleUsecase({
       }
     }
 
-    const article = await getArticleById({ id: created.id, includeDrafts: true });
-
-    return presentArticleDetail(article);
+    return getArticleById({ id: created.id, includeDrafts: true });
   };
 }
 

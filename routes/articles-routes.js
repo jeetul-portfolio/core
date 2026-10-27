@@ -27,6 +27,19 @@ function articlesRoutes({ controller, router, middlewares }) {
     controller.articlesController.publishArticle
   );
 
+  router.post(
+    '/articles/:id/categories',
+    middlewares.authenticate,
+    middlewares.authorize(['admin', 'editor', 'service']),
+    controller.articlesController.addArticleCategories
+  );
+  router.delete(
+    '/articles/:id/categories/:categoryId',
+    middlewares.authenticate,
+    middlewares.authorize(['admin', 'editor', 'service']),
+    controller.articlesController.removeArticleCategory
+  );
+
   return router;
 }
 

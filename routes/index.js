@@ -13,6 +13,7 @@ const userPreferencesRoutes = require('./user-preferences-routes');
 const resumesRoutes = require('./resumes-routes');
 const oauthClientsRoutes = require('./oauth-clients-routes');
 const contentRecordsRoutes = require('./content-records-routes');
+const seriesArticlesRoutes = require('./series-articles-routes');
 
 function buildRoutes({ controller, express, middlewares }) {
   const sample = sampleRoutes({ controller, router: express.Router(), middlewares });
@@ -40,6 +41,13 @@ function buildRoutes({ controller, express, middlewares }) {
     controller: controller.projectsController,
     resource: 'projects',
   });
+  const series = contentRecordsRoutes({
+    router: express.Router(),
+    middlewares,
+    controller: controller.seriesController,
+    resource: 'series',
+  });
+  const seriesArticles = seriesArticlesRoutes({ controller, router: express.Router(), middlewares });
 
   return {
     sample,
@@ -57,6 +65,8 @@ function buildRoutes({ controller, express, middlewares }) {
     oauthClients,
     experiences,
     projects,
+    series,
+    seriesArticles,
   };
 }
 

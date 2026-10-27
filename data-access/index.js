@@ -19,6 +19,9 @@ const buildUserPreferencesDataAccess = require('./user-preferences');
 const buildResumesDataAccess = require('./resumes');
 const buildExperiencesDataAccess = require('./experiences');
 const buildProjectsDataAccess = require('./projects');
+const buildArticleCategoriesDataAccess = require('./article-categories');
+const buildSeriesDataAccess = require('./series');
+const buildSeriesArticlesDataAccess = require('./series-articles');
 const buildOAuthClientsDataAccess = require('./oauth-clients');
 const buildOAuthAuthorizationCodesDataAccess = require('./oauth-authorization-codes');
 const buildOAuthRefreshTokensDataAccess = require('./oauth-refresh-tokens');
@@ -60,6 +63,9 @@ module.exports = function buildDataAccess(dependencies) {
   const resumes = buildResumesDataAccess(dataAccessDependencies);
   const experiences = buildExperiencesDataAccess(dataAccessDependencies);
   const projects = buildProjectsDataAccess(dataAccessDependencies);
+  const articleCategories = buildArticleCategoriesDataAccess(dataAccessDependencies);
+  const series = buildSeriesDataAccess(dataAccessDependencies);
+  const seriesArticles = buildSeriesArticlesDataAccess(dataAccessDependencies);
   const oauthClients = buildOAuthClientsDataAccess(dataAccessDependencies);
   const oauthAuthorizationCodes = buildOAuthAuthorizationCodesDataAccess(dataAccessDependencies);
   const oauthRefreshTokens = buildOAuthRefreshTokensDataAccess(dataAccessDependencies);
@@ -85,6 +91,9 @@ module.exports = function buildDataAccess(dependencies) {
     resumes,
     experiences,
     projects,
+    articleCategories,
+    series,
+    seriesArticles,
     oauthClients,
     oauthAuthorizationCodes,
     oauthRefreshTokens,

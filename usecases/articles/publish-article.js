@@ -6,6 +6,7 @@ function makePublishArticleUsecase({
   presentArticleDetail,
   parseTagsFromStorage,
   syncEntityTags,
+  getArticleById,
 }) {
   return async function publishArticleUsecase({ id, action }) {
     const current = await dataAccess.articles.getArticleById({ id, includeDrafts: true });
@@ -42,7 +43,7 @@ function makePublishArticleUsecase({
       }
     }
 
-    return presentArticleDetail(article);
+    return getArticleById({ id, includeDrafts: true });
   };
 }
 

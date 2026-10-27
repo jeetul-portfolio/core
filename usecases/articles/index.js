@@ -5,7 +5,11 @@ const makeCreateArticleUsecase = require('./create-article');
 const makeUpdateArticleUsecase = require('./update-article');
 const makeDeleteArticleUsecase = require('./delete-article');
 const makePublishArticleUsecase = require('./publish-article');
-const { NotFoundError } = require('../../exceptions');
+const makeAddArticleCategoriesUsecase = require('./add-article-categories');
+const makeRemoveArticleCategoryUsecase = require('./remove-article-category');
+const makeAttachCategories = require('./attach-categories');
+const makeAssertCategoriesExist = require('./assert-categories-exist');
+const { NotFoundError, ValidationError } = require('../../exceptions');
 const { buildArticlePresenter, buildSlug } = require('./article-presenter');
 const { buildExcerpt } = require('./build-excerpt');
 const { normalizeTagsForStorage, parseTagsFromStorage } = require('../../utils/tags-storage');
@@ -15,9 +19,13 @@ module.exports = function buildArticlesUsecase(dependencies) {
     parseTagsFromStorage,
   });
 
+  const attachCategories = makeAttachCategories(dependencies);
+  const assertCategoriesExist = makeAssertCategoriesExist({ ...dependencies, ValidationError });
+
   const getArticleById = makeGetArticleByIdUsecase({
     ...dependencies,
     presentArticleDetail,
+    attachCategories,
     NotFoundError,
   });
 
@@ -25,6 +33,7 @@ module.exports = function buildArticlesUsecase(dependencies) {
     getArticles: makeGetArticlesUsecase({
       ...dependencies,
       presentArticleListItem,
+      attachCategories,
     }),
     getArticleById,
     getArticleBySlug: makeGetArticleBySlugUsecase({
@@ -40,6 +49,7 @@ module.exports = function buildArticlesUsecase(dependencies) {
       buildExcerpt,
       normalizeTagsForStorage,
       parseTagsFromStorage,
+      assertCategoriesExist,
     }),
     updateArticle: makeUpdateArticleUsecase({
       ...dependencies,
@@ -48,6 +58,8 @@ module.exports = function buildArticlesUsecase(dependencies) {
       buildExcerpt,
       normalizeTagsForStorage,
       parseTagsFromStorage,
+      assertCategoriesExist,
+      getArticleById,
     }),
     deleteArticle: makeDeleteArticleUsecase(dependencies),
     publishArticle: makePublishArticleUsecase({
@@ -55,6 +67,18 @@ module.exports = function buildArticlesUsecase(dependencies) {
       NotFoundError,
       presentArticleDetail,
       parseTagsFromStorage,
+      getArticleById,
+    }),
+    addArticleCategories: makeAddArticleCategoriesUsecase({
+      ...dependencies,
+      assertCategoriesExist,
+      getArticleById,
+      NotFoundError,
+    }),
+    removeArticleCategory: makeRemoveArticleCategoryUsecase({
+      ...dependencies,
+      getArticleById,
+      NotFoundError,
     }),
   };
 };

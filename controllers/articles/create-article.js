@@ -25,6 +25,7 @@ function validateInputs({ Joi, ValidationError, body }) {
         Joi.string().trim().allow('')
       )
       .optional(),
+    categoryIds: Joi.array().items(Joi.number().integer().min(1)).unique().max(50).optional(),
     excerpt: Joi.string().trim().allow('').max(2000).optional(),
     content: Joi.string().trim().min(1).required(),
     coverImage: Joi.string().uri().allow(null, '').optional(),

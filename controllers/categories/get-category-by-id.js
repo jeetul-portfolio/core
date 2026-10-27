@@ -1,16 +1,10 @@
-function makeGetCategoryByIdController({ usecase, formatResponse, formatError, logger, Joi, ValidationError }) {
+const { parseIdOrSlug } = require('../content-records/request-helpers');
+
+function makeGetCategoryByIdController({ usecase, formatResponse, formatError, logger }) {
   return async function getCategoryByIdController(req, res) {
     try {
-      const schema = Joi.object({
-        id: Joi.number().integer().min(1).required(),
-      });
-
-      const { error, value } = schema.validate({ id: req.params.id });
-      if (error) {
-        throw new ValidationError(error.message);
-      }
-
-      const data = await usecase.categoriesUsecase.getCategoryById(value);
+      // Accepts a numeric id or a slug.
+      const data = await usecase.categoriesUsecase.getCategoryById(parseIdOrSlug(req.params.id));
       formatResponse(res, { statusCode: 200, body: data });
     } catch (error) {
       logger.error('Error in getCategoryByIdController:', error.message);

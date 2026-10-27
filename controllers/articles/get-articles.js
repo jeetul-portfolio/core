@@ -8,6 +8,8 @@ function makeGetArticlesController({ usecase, formatResponse, formatError, logge
         pageSize: req.query.pageSize,
         search: req.query.search,
         tag: req.query.tag,
+        category: req.query.category,
+        series: req.query.series,
         includeDrafts: req.query.includeDrafts,
       });
 
@@ -20,16 +22,18 @@ function makeGetArticlesController({ usecase, formatResponse, formatError, logge
   };
 }
 
-function validateInputs({ Joi, ValidationError, page, pageSize, search, tag, includeDrafts }) {
+function validateInputs({ Joi, ValidationError, page, pageSize, search, tag, category, series, includeDrafts }) {
   const schema = Joi.object({
     page: Joi.number().integer().min(1).default(1),
     pageSize: Joi.number().integer().min(1).max(500).default(10),
     search: Joi.string().trim().allow('').default(''),
     tag: Joi.string().trim().max(80).optional(),
+    category: Joi.string().trim().lowercase().max(160).pattern(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
+    series: Joi.string().trim().lowercase().max(160).pattern(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
     includeDrafts: Joi.boolean().truthy('true').truthy('1').falsy('false').falsy('0').default(false),
   });
 
-  const validatedResponse = schema.validate({ page, pageSize, search, tag, includeDrafts });
+  const validatedResponse = schema.validate({ page, pageSize, search, tag, category, series, includeDrafts });
 
   if (validatedResponse.error) {
     throw new ValidationError(validatedResponse.error.message);

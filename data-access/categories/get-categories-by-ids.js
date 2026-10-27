@@ -10,6 +10,7 @@ function makeGetCategoriesByIdsDataAccess({ logger, mysqlPool, tableName }) {
         SELECT
           id,
           name,
+          slug,
           description,
           sort_order AS sortOrder,
           created_at AS createdAt,

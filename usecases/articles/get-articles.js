@@ -1,9 +1,11 @@
-function makeGetArticlesUsecase({ dataAccess, presentArticleListItem }) {
+function makeGetArticlesUsecase({ dataAccess, presentArticleListItem, attachCategories }) {
   return async function getArticlesUsecase({
     page = 1,
     pageSize = 10,
     search = '',
     tag,
+    category,
+    series,
     includeDrafts = false,
   } = {}) {
     const rows = await dataAccess.articles.getArticles({
@@ -11,10 +13,12 @@ function makeGetArticlesUsecase({ dataAccess, presentArticleListItem }) {
       pageSize,
       search,
       tag,
+      category,
+      series,
       includeDrafts,
     });
 
-    return rows.map((article) => presentArticleListItem(article));
+    return (await attachCategories(rows)).map((article) => presentArticleListItem(article));
   };
 }
 

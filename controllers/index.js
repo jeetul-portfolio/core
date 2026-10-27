@@ -13,6 +13,7 @@ const buildUserPreferencesController = require('./user-preferences');
 const buildResumesController = require('./resumes');
 const buildExperiencesController = require('./experiences');
 const buildProjectsController = require('./projects');
+const buildSeriesController = require('./series');
 const buildOAuthController = require('./oauth');
 const buildOAuthClientsController = require('./oauth-clients');
 const crypto = require('crypto');
@@ -43,6 +44,7 @@ module.exports = function(dependencies) {
     resumesController: buildResumesController(controllerDependencies),
     experiencesController: buildExperiencesController(controllerDependencies),
     projectsController: buildProjectsController(controllerDependencies),
+    seriesController: buildSeriesController(controllerDependencies),
     oauthClientsController: buildOAuthClientsController(controllerDependencies),
     oauthController: buildOAuthController(controllerDependencies),
   };

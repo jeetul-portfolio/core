@@ -4,6 +4,8 @@ function makeGetArticlesDataAccess({ logger, mysqlPool, tableName }) {
     pageSize = 10,
     search = '',
     tag,
+    category,
+    series,
     includeDrafts = false,
   } = {}) {
     try {
@@ -25,6 +27,26 @@ function makeGetArticlesDataAccess({ logger, mysqlPool, tableName }) {
         const tagTerm = `%${tag}%`;
         whereClauses.push('(tags LIKE ? OR title LIKE ? OR excerpt LIKE ? OR content LIKE ?)');
         params.push(tagTerm, tagTerm, tagTerm, tagTerm);
+      }
+
+      if (category) {
+        whereClauses.push(`EXISTS (
+          SELECT 1 FROM article_categories ac
+          JOIN categories c ON c.id = ac.category_id
+          WHERE ac.article_id = ${tableName}.id AND c.slug = ?
+        )`);
+        params.push(category);
+      }
+
+      if (series) {
+        // Public listings only see articles through published series.
+        const seriesStatusClause = includeDrafts ? '' : " AND s.status = 'published'";
+        whereClauses.push(`EXISTS (
+          SELECT 1 FROM series_articles sa
+          JOIN series s ON s.id = sa.series_id
+          WHERE sa.article_id = ${tableName}.id AND s.slug = ?${seriesStatusClause}
+        )`);
+        params.push(series);
       }
 
       const whereClause = whereClauses.length > 0 ? ` WHERE ${whereClauses.join(' AND ')}` : '';

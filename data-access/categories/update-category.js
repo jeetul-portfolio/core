@@ -1,3 +1,5 @@
+const { ConflictError } = require('../../exceptions');
+
 function makeUpdateCategoryDataAccess({ logger, mysqlPool, tableName }) {
   return async function updateCategoryDataAccess(payload) {
     try {
@@ -5,6 +7,7 @@ function makeUpdateCategoryDataAccess({ logger, mysqlPool, tableName }) {
       const values = [];
 
       appendAssignment(payload, 'name', 'name', assignments, values);
+      appendAssignment(payload, 'slug', 'slug', assignments, values);
       appendAssignment(payload, 'description', 'description', assignments, values);
       appendAssignment(payload, 'sortOrder', 'sort_order', assignments, values);
 
@@ -24,6 +27,9 @@ function makeUpdateCategoryDataAccess({ logger, mysqlPool, tableName }) {
       const [result] = await mysqlPool.query(query, values);
       return result.affectedRows > 0;
     } catch (error) {
+      if (error.code === 'ER_DUP_ENTRY') {
+        throw new ConflictError('A category with this name or slug already exists');
+      }
       logger.error('Database query failed in updateCategoryDataAccess:', error.message);
       throw error;
     }

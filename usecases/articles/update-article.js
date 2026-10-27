@@ -8,18 +8,28 @@ function makeUpdateArticleUsecase({
   normalizeTagsForStorage,
   parseTagsFromStorage,
   syncEntityTags,
+  assertCategoriesExist,
+  getArticleById,
 }) {
-  return async function updateArticleUsecase(input) {
+  return async function updateArticleUsecase({ categoryIds, ...input }) {
     const current = await dataAccess.articles.getArticleById({ id: input.id, includeDrafts: true });
     if (!current) {
       throw new NotFoundError(`Article not found for id ${input.id}`);
     }
 
-    const payload = buildPayload(input, buildExcerpt, normalizeTagsForStorage, current.status);
-    const updated = await dataAccess.articles.updateArticle(payload);
+    if (categoryIds) await assertCategoriesExist(categoryIds);
 
-    if (!updated) {
-      throw new NotFoundError(`Article not found for id ${input.id}`);
+    const payload = buildPayload(input, buildExcerpt, normalizeTagsForStorage, current.status);
+    // categoryIds alone is a valid update; only touch the row when article fields changed.
+    if (Object.keys(payload).length > 1) {
+      const updated = await dataAccess.articles.updateArticle(payload);
+      if (!updated) {
+        throw new NotFoundError(`Article not found for id ${input.id}`);
+      }
+    }
+
+    if (categoryIds) {
+      await dataAccess.articleCategories.replaceForArticle({ articleId: input.id, categoryIds });
     }
 
     const article = await dataAccess.articles.getArticleById({
@@ -35,7 +45,7 @@ function makeUpdateArticleUsecase({
       await syncArticleTags({ syncEntityTags, parseTagsFromStorage, article });
     }
 
-    return presentArticleDetail(article);
+    return getArticleById({ id: input.id, includeDrafts: true });
   };
 }
 

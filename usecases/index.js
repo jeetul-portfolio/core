@@ -13,6 +13,7 @@ const buildUserPreferencesUsecase = require('./user-preferences');
 const buildResumesUsecase = require('./resumes');
 const buildExperiencesUsecase = require('./experiences');
 const buildProjectsUsecase = require('./projects');
+const buildSeriesUsecase = require('./series');
 const buildOAuthUsecase = require('./oauth');
 const buildOAuthClientsUsecase = require('./oauth-clients');
 const jwt = require('jsonwebtoken');
@@ -50,6 +51,7 @@ module.exports = function(dependencies) {
     resumesUsecase: buildResumesUsecase(dependencies),
     experiencesUsecase: buildExperiencesUsecase(depsWithSync),
     projectsUsecase: buildProjectsUsecase(depsWithSync),
+    seriesUsecase: buildSeriesUsecase(depsWithSync),
     oauthClientsUsecase: buildOAuthClientsUsecase(dependencies),
     oauthUsecase: buildOAuthUsecase({ ...dependencies, jwt, bcrypt, crypto }),
   };

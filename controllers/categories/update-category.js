@@ -1,9 +1,12 @@
+const { SLUG_PATTERN } = require('../content-records/field-types');
+
 function makeUpdateCategoryController({ usecase, formatResponse, formatError, logger, Joi, ValidationError }) {
   return async function updateCategoryController(req, res) {
     try {
       const schema = Joi.object({
         id: Joi.number().integer().min(1).required(),
         name: Joi.string().trim().min(1).max(100).optional(),
+        slug: Joi.string().trim().max(120).pattern(SLUG_PATTERN, 'lowercase-hyphenated slug').optional(),
         description: Joi.string().trim().allow('', null).optional(),
         sortOrder: Joi.number().integer().min(0).optional(),
       });

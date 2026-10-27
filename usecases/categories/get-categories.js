@@ -1,7 +1,18 @@
 const { presentSkill } = require('../skills/skill-presenter');
 
 function makeGetCategoriesUsecase({ dataAccess, presentCategory }) {
-  return async function getCategoriesUsecase({ page = 1, pageSize = 100, search = '', includeSkills = false } = {}) {
+  return async function getCategoriesUsecase({
+    page = 1,
+    pageSize = 100,
+    search = '',
+    includeSkills = false,
+    hasArticles = false,
+  } = {}) {
+    if (hasArticles) {
+      const rows = await dataAccess.articleCategories.getCategoriesWithArticleCounts({ page, pageSize, search });
+      return rows.map(presentCategory);
+    }
+
     const categories = await dataAccess.categories.getCategories({ page, pageSize, search });
 
     if (!includeSkills) {

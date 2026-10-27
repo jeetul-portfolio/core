@@ -1,4 +1,4 @@
-function makeGetArticleByIdUsecase({ dataAccess, presentArticleDetail, NotFoundError }) {
+function makeGetArticleByIdUsecase({ dataAccess, presentArticleDetail, attachCategories, NotFoundError }) {
   return async function getArticleByIdUsecase({ id, includeDrafts = false }) {
     const article = await dataAccess.articles.getArticleById({ id, includeDrafts });
 
@@ -6,7 +6,8 @@ function makeGetArticleByIdUsecase({ dataAccess, presentArticleDetail, NotFoundE
       throw new NotFoundError(`Article not found for id ${id}`);
     }
 
-    return presentArticleDetail(article);
+    const [withCategories] = await attachCategories([article]);
+    return presentArticleDetail(withCategories);
   };
 }
 
