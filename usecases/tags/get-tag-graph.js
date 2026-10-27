@@ -8,6 +8,8 @@
  *   - tag nodes:    "tag-{tagId}"
  *   - entity nodes: "{entityType}-{entityId}"
  */
+const { buildSlug } = require('../articles/article-presenter');
+
 function makeGetTagGraphUsecase({ dataAccess }) {
   return async function getTagGraphUsecase() {
     const { tags: allTags, references } = await dataAccess.tags.getTagGraph();
@@ -111,7 +113,7 @@ async function fetchArticleLabels(dataAccess, ids) {
   if (!ids.length) return [];
   try {
     const rows = await dataAccess.articles.getArticlesByIds({ ids, includeDrafts: true });
-    return rows.map((r) => ({ id: r.id, label: r.title }));
+    return rows.map((r) => ({ id: r.id, label: r.title, slug: buildSlug(r.title) }));
   } catch {
     return [];
   }
